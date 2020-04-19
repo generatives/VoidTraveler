@@ -10,9 +10,10 @@ using VoidTraveler.Game.Core;
 
 namespace VoidTraveler.Game.Player
 {
+    [With(typeof(Transform), typeof(Player))]
     public class PlayerRenderer : AEntitySystem<DrawDevice>
     {
-        public PlayerRenderer(World world) : base(world.GetEntities().With<Transform>().With<Player>().AsSet())
+        public PlayerRenderer(World world) : base(world)
         {
         }
 

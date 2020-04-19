@@ -20,194 +20,153 @@ using VoidTraveler.Game.Constructs.Components;
 using System.Linq;
 using System.Diagnostics;
 using VoidTraveler.Editor;
+using VoidTraveler.Networking;
+using VoidTraveler.Networking.EntityExistence;
+using System.Threading;
+using VoidTraveler.Game.Core.Ephemoral;
+using System.IO;
+using MessagePack;
+using MessagePack.Resolvers;
 
 namespace VoidTraveler
 {
     class Program
     {
+        private static byte _messageId = 0;
+        private static Dictionary<int, Action<MemoryStream, Entity>> _recievers = new Dictionary<int, Action<MemoryStream, Entity>>();
+        private static Dictionary<Type, Action<object, MemoryStream>> _serializers = new Dictionary<Type, Action<object, MemoryStream>>();
+        private static MessagePackSerializerOptions _serializerOptions;
+
         static void Main(string[] args)
         {
-            var scene = new Scene();
+            var resolver = CompositeResolver.Create(CustomResolver.Instance, StandardResolver.Instance);
+            _serializerOptions = MessagePackSerializerOptions.Standard.WithResolver(resolver);
 
-            scene.RenderingSystems.Add(new ConstructRenderer(scene.World));
-            scene.RenderingSystems.Add(new PlayerRenderer(scene.World));
-            scene.RenderingSystems.Add(new ProjectileRenderer(scene.World));
+            Message<EntityMessage<EntityAdded>>();
+            Message<EntityMessage<EntityRemoved>>();
+            Message<EntityMessage<TransformMessage>>();
+            Message<EntityMessage<PlayerMessage>>();
+            Message<EntityMessage<ProjectileMessage>>();
+            Message<EntityMessage<PlayerMovementAction>>();
+            Message<EntityMessage<PlayerFireAction>>();
+            Message<EntityMessage<CameraMessage>>();
+            Message<EntityMessage<ConstructMessage>>();
+            Message<EntityMessage<ConstructPilotingAction>>();
+
+            var serverScene = new Scene();
+            var serverSystems = new List<ISystem<ServerSystemUpdate>>();
+
+            serverSystems.Add(new EntityExistenceSender(serverScene.World));
+            serverSystems.Add(new TransformInitServerSystem(serverScene.World));
+            serverSystems.Add(new TransformChangeServerSystem(serverScene.World));
+            serverSystems.Add(new PlayerStateServerSystem(serverScene.World));
+            serverSystems.Add(new ProjectileServerSystem(serverScene.World));
+            serverSystems.Add(new CameraServerSystem(serverScene.World));
+            serverSystems.Add(new ConstructServerSystem(serverScene.World));
+
+            serverScene.RenderingSystems.Add(new ConstructRenderer(serverScene.World));
+            serverScene.RenderingSystems.Add(new PlayerRenderer(serverScene.World));
+            serverScene.RenderingSystems.Add(new ProjectileRenderer(serverScene.World));
 
             var physicsSystem = new PhysicsSystem();
-            scene.LogicSystems.Add(new ConstructBodyGenerator(physicsSystem, scene.World));
-            scene.LogicSystems.Add(new PhysicsBodyMover(scene.World));
-            scene.LogicSystems.Add(physicsSystem);
-            scene.LogicSystems.Add(new PhysicsBodySync(scene.World));
+            serverScene.LogicSystems.Add(new ConstructBodyGenerator(physicsSystem, serverScene.World));
+            serverScene.LogicSystems.Add(physicsSystem);
+            serverScene.LogicSystems.Add(new PhysicsBodySync(serverScene.World));
+            serverScene.LogicSystems.Add(new ConstructPilotingApplier(serverScene.World));
+            serverScene.LogicSystems.Add(new ConstructPilotSystem(serverScene.World));
 
-            scene.LogicSystems.Add(new PlayerInputSystem(scene.World));
-            scene.LogicSystems.Add(new PlayerMovementSystem(physicsSystem, scene.World));
+            serverScene.LogicSystems.Add(new NetworkedPlayerInputReciever(serverScene.World));
+            serverScene.LogicSystems.Add(new NetworkedPlayerFiringReciever(serverScene.World));
+            serverScene.LogicSystems.Add(new PlayerMovementSystem(physicsSystem, serverScene.World));
 
-            scene.LogicSystems.Add(new ProjectileMovementSystem(physicsSystem, scene.World));
+            serverScene.LogicSystems.Add(new ProjectileMovementSystem(physicsSystem, serverScene.World));
+            serverScene.LogicSystems.Add(new EphemoralEntityRemover(serverScene.World));
 
-            var construct = scene.World.CreateEntity();
-            var constructTransform = new Transform() { Position = new Vector2(0, 0) };
-            construct.Set(constructTransform);
-            construct.Set(new Construct() { Components = CreateBoundedComponents(20, 10, 20).ToList() });
+            var construct = serverScene.World.CreateEntity();
+            construct.Set(new NetworkedEntity() { Id = Guid.NewGuid() });
+            construct.Set(new Transform() { Position = new Vector2(0, 0) });
+            construct.Set(CreateBoundedConstruct(20, 10, 20));
+            construct.Set(new ConstructPilotable());
             construct.Set(new PhysicsBody());
-            construct.Set(new ControlledPhysicsBody());
             construct.Set(new Camera());
 
-            var player = scene.World.CreateEntity();
-            var playerTransform = new Transform() { Position = new Vector2(0, 0) };
-            playerTransform.SetParent(constructTransform);
-            player.Set(playerTransform);
-            player.Set(new Player() { Radius = 10, Colour = RgbaFloat.Blue, MoveSpeed = 100 });
+            var otherConstruct = serverScene.World.CreateEntity();
+            otherConstruct.Set(new NetworkedEntity() { Id = Guid.NewGuid() });
+            otherConstruct.Set(new Transform() { Position = new Vector2(300, 0) });
+            otherConstruct.Set(CreateBoundedConstruct(20, 10, 10));
+            otherConstruct.Set(new PhysicsBody());
 
-            var game = new Game(scene);
-            game.Run();
+            var player = serverScene.World.CreateEntity();
+            player.Set(new NetworkedEntity() { Id = Guid.NewGuid() });
+            player.Set(new Transform() { Position = new Vector2(0, 0), Parent = construct });
+            player.Set(new Player() { Radius = 10, Colour = RgbaFloat.Blue, MoveSpeed = 100, CurrentConstruct = construct });
+
+            var server = new Server(serverScene, serverSystems, _recievers, _serializers);
+
+            var clientScene = new Scene();
+            var clientSystems = new List<ISystem<ClientSystemUpdate>>();
+
+            clientScene.RenderingSystems.Add(new ConstructRenderer(clientScene.World));
+            clientScene.RenderingSystems.Add(new PlayerRenderer(clientScene.World));
+            clientScene.RenderingSystems.Add(new ProjectileRenderer(clientScene.World));
+
+            //clientScene.LogicSystems.Add(new PlayerInputSystem(clientScene.World));
+            clientScene.LogicSystems.Add(new EntityAdder(clientScene.World));
+
+            clientScene.LogicSystems.Add(new PlayerStateReciever(clientScene.World));
+            clientScene.LogicSystems.Add(new TransformMessageApplier(clientScene.World));
+            clientScene.LogicSystems.Add(new ProjectileMessageApplier(clientScene.World));
+            clientScene.LogicSystems.Add(new CameraMessageApplier(clientScene.World));
+            clientScene.LogicSystems.Add(new ConstructMessageApplier(clientScene.World));
+
+            clientScene.LogicSystems.Add(new TransformLerper(clientScene.World));
+
+            clientScene.LogicSystems.Add(new EntityRemover(clientScene.World));
+
+            clientScene.LogicSystems.Add(new EphemoralEntityRemover(clientScene.World));
+
+            clientSystems.Add(new NetworkedPlayerInputSystem(clientScene.World));
+            clientSystems.Add(new NetworkedPlayerFiringSystem(clientScene.World));
+            clientSystems.Add(new ConstructPilotingClientSystem(clientScene.World));
+
+            var client = new Client(clientScene, clientSystems, _recievers, _serializers);
+
+            var serverTask = server.Run();
+            var clientTask = client.Run();
+
+            Task.WaitAll(serverTask, clientTask);
         }
 
-        private static IEnumerable<ConstructComponent> CreateBoundedComponents(float tileSize, int width, int height)
+        private static void Message<T>()
         {
-            var halfTotalWidth = (tileSize * width) / 2f;
-            var halfTotalHeight = (tileSize * height) / 2f;
+            var messageId = _messageId;
+            _recievers[messageId] = (MemoryStream stream, Entity entity) =>
+            {
+                var message = MessagePackSerializer.Deserialize<T>(stream, _serializerOptions);
+                entity.Set(message);
+            };
+            _serializers[typeof(T)] = (object message, MemoryStream stream) =>
+            {
+                stream.WriteByte(messageId);
+                MessagePackSerializer.Serialize(stream, (T)message, _serializerOptions);
+            };
+            _messageId++;
+        }
+
+        private static Construct CreateBoundedConstruct(float tileSize, int width, int height)
+        {
+            var construct = new Construct(width, height, tileSize);
 
             for (int x = 0; x < width; x++)
             {
                 for (int y = 0; y < height; y++)
                 {
                     var edge = x == 0 || x == width - 1 || y == 0 || y == height - 1;
-                    yield return new ConstructComponent()
-                    {
-                        Position = new Vector2(x * tileSize - halfTotalWidth, y * tileSize - halfTotalHeight),
-                        Size = new Vector2(tileSize, tileSize),
-                        Colour = edge ? RgbaFloat.Grey : RgbaFloat.White,
-                        Collides = edge
-                    };
+                    construct[x, y] = new ConstructTile() { Exists = true, Collides = edge, Colour = edge ? RgbaFloat.Grey : RgbaFloat.White };
                 }
             }
-        }
 
-        public class Game
-        {
-            private DesktopWindow _window;
-            private DrawDevice _drawDevice;
-            private ViewportManager _viewport;
-
-            private TransformedInputTracker _cameraSpaceInputTracker;
-            private ActiveInputTracker _cameraSpaceGameInputTracker;
-
-            private ImGuiRenderer _imGuiRenderer;
-
-            private Scene _scene;
-
-            private EntitySet _camerasSet;
-
-            private Stopwatch _stopwatch;
-
-            private EditorMenu _editorMenu;
-
-            public Game(Scene scene)
-            {
-                _scene = scene;
-                _camerasSet = _scene.World.GetEntities().With<Transform>().With<Camera>().AsSet();
-                _stopwatch = new Stopwatch();
-
-                _editorMenu = new EditorMenu();
-                _editorMenu.Editors.Add(new ConstructEditor());
-            }
-
-            public void Run()
-            {
-                var platform = new DesktopPlatform();
-
-                WindowCreateInfo wci = new WindowCreateInfo
-                {
-                    X = 100,
-                    Y = 100,
-                    WindowWidth = 1280,
-                    WindowHeight = 720,
-                    WindowTitle = "Tortuga Demo"
-                };
-
-                GraphicsDeviceOptions options = new GraphicsDeviceOptions(
-                    debug: false,
-                    swapchainDepthFormat: PixelFormat.R16_UNorm,
-                    syncToVerticalBlank: true,
-                    resourceBindingModel: ResourceBindingModel.Improved,
-                    preferDepthRangeZeroToOne: true,
-                    preferStandardClipSpaceYDirection: true);
-#if DEBUG
-                options.Debug = true;
-#endif
-
-                _window = platform.CreateWindow(wci, options) as DesktopWindow;
-                _window.GraphicsDeviceCreated += LoadResources;
-                _window.Tick += Update;
-                _window.Resized += _window_Resized;
-
-                _viewport = new ViewportManager(1280, 720);
-
-                _cameraSpaceInputTracker = new TransformedInputTracker(_window.InputTracker);
-                _cameraSpaceGameInputTracker = new ActiveInputTracker(_cameraSpaceInputTracker);
-
-                var task = _window.Run();
-                Task.WaitAll(task);
-            }
-
-            private void _window_Resized()
-            {
-                _viewport.WindowChanged(_window.Width, _window.Height);
-                _imGuiRenderer.WindowResized(_window.Width, _window.Height);
-            }
-
-            public void LoadResources()
-            {
-                _drawDevice = new DrawDevice(_window.GraphicsDevice, _window.MainSwapchain);
-
-                _imGuiRenderer = new ImGuiRenderer(_window.GraphicsDevice, _window.MainSwapchain.Framebuffer.OutputDescription, _window.Width, _window.Height);
-            }
-
-            public void Update()
-            {
-                var deltaSeconds = _stopwatch.Elapsed.TotalSeconds;
-                _stopwatch.Restart();
-                _imGuiRenderer.Update((float)deltaSeconds, _window.InputSnapshot);
-                var imGuiWantsMouse = ImGuiNET.ImGui.GetIO().WantCaptureMouse;
-
-                var cameraEntities = _camerasSet.GetEntities();
-                var cameraTransform = cameraEntities.Length > 0 ? cameraEntities[0].Get<Transform>() : default;
-
-                var inputTrackerTransform = Matrix3x2.CreateTranslation(-_window.Width / 2f, -_window.Height / 2f) *
-                    Matrix3x2.CreateScale(1, -1) *
-                    cameraTransform.Matrix * 
-                    Matrix3x2.CreateScale(1 / 0.8f);
-
-                _cameraSpaceInputTracker.SetTransform(inputTrackerTransform);
-                _cameraSpaceGameInputTracker.SetActive(!imGuiWantsMouse);
-                _scene.Update(new LogicUpdate((float)deltaSeconds, _cameraSpaceGameInputTracker));
-
-                cameraEntities = _camerasSet.GetEntities();
-                cameraTransform = cameraEntities.Length > 0 ? cameraEntities[0].Get<Transform>() : default;
-
-                var cameraMatrix = cameraTransform.GetCameraMatrix() * Matrix4x4.CreateScale(0.8f);
-
-                var vp = _viewport.Viewport;
-                _drawDevice.Begin(cameraMatrix * _viewport.GetScalingTransform(), vp);
-
-                _scene.Render(_drawDevice);
-                SpriteBatchExtensions.DrawCircle(_drawDevice, Vector2.Zero, 5, 8, RgbaFloat.Red);
-                SpriteBatchExtensions.DrawCircle(_drawDevice, new Vector2(300, 300), 5, 8, RgbaFloat.Red);
-                SpriteBatchExtensions.DrawCircle(_drawDevice, new Vector2(300, -300), 5, 8, RgbaFloat.Red);
-                SpriteBatchExtensions.DrawCircle(_drawDevice, new Vector2(-300, -300), 5, 8, RgbaFloat.Red);
-                SpriteBatchExtensions.DrawCircle(_drawDevice, new Vector2(-300, 300), 5, 8, RgbaFloat.Red);
-
-                _editorMenu.Run(new EditorRun() { CameraSpaceInput = _cameraSpaceInputTracker, CameraSpaceGameInput = _cameraSpaceGameInputTracker , Scene = _scene });
-
-                _drawDevice.Draw();
-
-                _imGuiRenderer.Render(_drawDevice.GraphicsDevice, _drawDevice.CommandList);
-
-                _drawDevice.End();
-
-                _window.GraphicsDevice.SwapBuffers(_window.MainSwapchain);
-                _window.GraphicsDevice.WaitForIdle();
-            }
+            return construct;
         }
     }
 }

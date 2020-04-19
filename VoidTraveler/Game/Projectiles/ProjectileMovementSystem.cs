@@ -28,7 +28,7 @@ namespace VoidTraveler.Game.Projectiles
             if(projectile.MoveDirection != Vector2.Zero)
             {
                 var goalPosition = transform.Position + Vector2.Normalize(projectile.MoveDirection) * projectile.MoveSpeed * (float)update.DeltaSeconds;
-                var goalWorldPosition = transform.Parent.GetWorld(goalPosition);
+                var goalWorldPosition = transform.ParentTransform.GetWorld(goalPosition);
                 var playerAABB = new AABB(goalWorldPosition, projectile.Radius * 2, projectile.Radius * 2);
 
                 var collided = false;

@@ -35,11 +35,11 @@ namespace VoidTraveler.Editor
 
                     var fixture = world.TestPoint(runParam.CameraSpaceInput.MousePosition);
                     if (fixture != null &&
-                        fixture.UserData is ConstructComponent component &&
+                        fixture.UserData is ConstructTileUserInfo userInfo &&
                         fixture.Body.UserData is Entity bodyEntity && bodyEntity.Has<Construct>())
                     {
                         var construct = bodyEntity.Get<Construct>();
-                        construct.Components.Remove(component);
+                        construct[userInfo.X, userInfo.Y] = new ConstructTile();
                         bodyEntity.Set(construct);
                     }
                 }

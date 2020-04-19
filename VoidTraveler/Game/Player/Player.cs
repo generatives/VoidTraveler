@@ -16,5 +16,6 @@ namespace VoidTraveler.Game.Player
         public float RotationAmount { get; set; }
         public bool Fire { get; set; }
         public Vector2 FireAt { get; set; }
+        public Entity CurrentConstruct { get; set; }
     }
 }

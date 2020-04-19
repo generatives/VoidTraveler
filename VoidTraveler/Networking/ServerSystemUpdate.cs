@@ -4,8 +4,10 @@ using System.Text;
 
 namespace VoidTraveler.Networking
 {
-    public struct NetworkUpdate
+    public struct ServerSystemUpdate
     {
         public List<object> Messages { get; set; }
+        public bool NewClients { get; set; }
+        public List<object> NewClientMessages { get; set; }
     }
 }

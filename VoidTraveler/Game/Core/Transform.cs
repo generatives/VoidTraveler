@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DefaultEcs;
+using System;
 using System.Collections.Generic;
 using System.Numerics;
 using System.Text;
@@ -7,24 +8,21 @@ namespace VoidTraveler.Game.Core
 {
     public class Transform
     {
-        public Transform Parent { get; private set; }
-
-        private List<Transform> _children;
-        public IEnumerable<Transform> Children { get => _children; }
-        public bool InheiritParentTransform { get; set; } = true;
-        public bool IsInheiritingParentTransform => InheiritParentTransform && Parent != null;
+        public Entity? Parent { get; set; }
+        public Transform ParentTransform => Parent.Value.Get<Transform>();
+        public bool IsInheiritingParentTransform => Parent.HasValue;
         public Vector2 Position { get; set; }
         public Vector2 WorldPosition
         {
             get
             {
-                return IsInheiritingParentTransform ? Parent.GetWorld(Position) : Position;
+                return IsInheiritingParentTransform ? ParentTransform.GetWorld(Position) : Position;
             }
             set
             {
                 if (IsInheiritingParentTransform)
                 {
-                    Position = Parent.GetLocal(value);
+                    Position = ParentTransform.GetLocal(value);
                 }
                 else
                 {
@@ -37,13 +35,13 @@ namespace VoidTraveler.Game.Core
         {
             get
             {
-                return IsInheiritingParentTransform ? Rotation + Parent.WorldRotation : Rotation;
+                return IsInheiritingParentTransform ? Rotation + ParentTransform.WorldRotation : Rotation;
             }
             set
             {
                 if (IsInheiritingParentTransform)
                 {
-                    Rotation = value - Parent.WorldRotation;
+                    Rotation = value - ParentTransform.WorldRotation;
                 }
                 else
                 {
@@ -56,13 +54,13 @@ namespace VoidTraveler.Game.Core
         {
             get
             {
-                return IsInheiritingParentTransform ? Vector2.Multiply(Scale, Parent.WorldScale) : Scale;
+                return IsInheiritingParentTransform ? Vector2.Multiply(Scale, ParentTransform.WorldScale) : Scale;
             }
             set
             {
                 if (IsInheiritingParentTransform)
                 {
-                    Scale = Vector2.Divide(value, Parent.WorldScale);
+                    Scale = Vector2.Divide(value, ParentTransform.WorldScale);
                 }
                 else
                 {
@@ -74,57 +72,23 @@ namespace VoidTraveler.Game.Core
             Matrix3x2.CreateRotation(Rotation) *
             Matrix3x2.CreateTranslation(Position);
 
-        public Matrix3x2 WorldMatrix => IsInheiritingParentTransform ? Parent.GetWorldMatrix(Matrix) : Matrix;
+        public Matrix3x2 WorldMatrix => IsInheiritingParentTransform ? ParentTransform.GetWorldMatrix(Matrix) : Matrix;
 
         public Matrix3x2 InverseMatrix => Matrix3x2.CreateTranslation(-Position) *
             Matrix3x2.CreateRotation(-Rotation) *
             Matrix3x2.CreateScale(1f / Scale.X, 1f / Scale.Y);
 
-        public Matrix3x2 WorldInverseMatrix => IsInheiritingParentTransform ? Parent.WorldInverseMatrix * InverseMatrix : InverseMatrix;
+        public Matrix3x2 WorldInverseMatrix => IsInheiritingParentTransform ? ParentTransform.WorldInverseMatrix * InverseMatrix : InverseMatrix;
 
         private Matrix3x2 GetWorldMatrix(Matrix3x2 localMatrix)
         {
             var transformed = localMatrix * Matrix;
-            return IsInheiritingParentTransform ? Parent.GetWorldMatrix(transformed) : transformed;
+            return IsInheiritingParentTransform ? ParentTransform.GetWorldMatrix(transformed) : transformed;
         }
 
         public Transform()
         {
-            _children = new List<Transform>(0);
             Scale = Vector2.One;
-        }
-
-        public void AddChild(Transform child)
-        {
-            if (child.Parent != null)
-            {
-                child.Parent.RemoveChild(child);
-            }
-            _children.Add(child);
-            child.Parent = this;
-        }
-
-        public void RemoveChild(Transform child)
-        {
-            if (child.Parent == this)
-            {
-                child.Parent = null;
-                _children.Remove(child);
-            }
-        }
-
-        public void SetParent(Transform parent)
-        {
-            Parent?.RemoveChild(this);
-
-            if (parent != null)
-            {
-                parent.AddChild(this);
-            }
-            else
-            {
-                Parent = null;
-            }
         }
 
         public Vector2 GetLocal(Vector2 world)

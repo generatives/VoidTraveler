@@ -22,6 +22,8 @@ namespace VoidTraveler.Physics
 
             transform.WorldPosition = constructBody.Body.Position;
             transform.WorldRotation = constructBody.Body.Rotation;
+
+            entity.Set(transform);
         }
     }
 }

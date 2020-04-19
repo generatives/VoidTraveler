@@ -10,6 +10,13 @@ using VoidTraveler.Game.Physics;
 
 namespace VoidTraveler.Game.Constructs
 {
+    public struct ConstructTileUserInfo
+    {
+        public int X;
+        public int Y;
+        public ConstructTile Tile;
+    }
+
     public class ConstructBodyGenerator : PhysicsBodyGenerator<Construct>
     {
         public ConstructBodyGenerator(PhysicsSystem physicsSystem, DefaultEcs.World world) : base(physicsSystem, world)
@@ -27,17 +34,19 @@ namespace VoidTraveler.Game.Constructs
                 body.DestroyFixture(fixture);
             }
 
-            foreach (var component in source.Components)
+            var offset = new Vector2(-source.XLength * source.TileSize / 2f, -source.YLength * source.TileSize / 2f);
+
+            foreach (var (x, y, tile) in source.GetTiles())
             {
-                if (component.Collides)
+                if (tile.Exists && tile.Collides)
                 {
                     FixtureFactory.AttachRectangle(
-                        component.Size.X,
-                        component.Size.Y,
+                        source.TileSize,
+                        source.TileSize,
                         0.2f,
-                        new Vector2(component.Position.X, component.Position.Y),
+                        offset + new Vector2(x * source.TileSize, y * source.TileSize),
                         body,
-                        component);
+                        new ConstructTileUserInfo() { X = x, Y = y, Tile = tile });
                 }
             }
         }
