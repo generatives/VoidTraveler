@@ -96,7 +96,7 @@ namespace VoidTraveler
             options.Debug = true;
 #endif
 
-            _window = platform.CreateWindow(wci, options) as DesktopWindow;
+            _window = platform.CreateWindow(wci, options, GraphicsBackend.Vulkan) as DesktopWindow;
             _window.GraphicsDeviceCreated += LoadResources;
             _window.Tick += Update;
             _window.Resized += _window_Resized;
@@ -192,17 +192,22 @@ namespace VoidTraveler
             cameraEntities = _camerasSet.GetEntities();
             cameraTransform = cameraEntities.Length > 0 ? cameraEntities[0].Get<Transform>() : default;
 
-            var cameraMatrix = cameraTransform?.GetCameraMatrix() ?? Matrix4x4.Identity * Matrix4x4.CreateScale(0.8f);
+            var cameraMatrix = cameraTransform?.GetCameraMatrix(Settings.GRAPHICS_SCALE) ?? Matrix4x4.Identity * Matrix4x4.CreateScale(0.8f);
 
             var vp = _viewport.Viewport;
             _drawDevice.Begin(cameraMatrix * _viewport.GetScalingTransform(), vp);
 
             Scene.Render(_drawDevice);
-            SpriteBatchExtensions.DrawCircle(_drawDevice, Vector2.Zero, 5, 8, RgbaFloat.Red);
-            SpriteBatchExtensions.DrawCircle(_drawDevice, new Vector2(300, 300), 5, 8, RgbaFloat.Red);
-            SpriteBatchExtensions.DrawCircle(_drawDevice, new Vector2(300, -300), 5, 8, RgbaFloat.Red);
-            SpriteBatchExtensions.DrawCircle(_drawDevice, new Vector2(-300, -300), 5, 8, RgbaFloat.Red);
-            SpriteBatchExtensions.DrawCircle(_drawDevice, new Vector2(-300, 300), 5, 8, RgbaFloat.Red);
+
+            float gridSize = 20;
+            var gridCenter = new Vector2((int)Math.Round(cameraTransform.WorldPosition.X / gridSize) * gridSize, (int)Math.Round(cameraTransform.WorldPosition.Y / gridSize) * gridSize);
+            for (int x = -2; x <= 2; x++)
+            {
+                for (int y = -2; y <= 2; y++)
+                {
+                    SpriteBatchExtensions.DrawCircle(_drawDevice, (gridCenter + new Vector2(x, y) * gridSize) * Settings.GRAPHICS_SCALE, 0.2f * Settings.GRAPHICS_SCALE, 8, RgbaFloat.Red);
+                }
+            }
 
             _editorMenu.Run(new EditorRun() { CameraSpaceInput = _cameraSpaceInputTracker, CameraSpaceGameInput = _cameraSpaceGameInputTracker, Scene = Scene });
 

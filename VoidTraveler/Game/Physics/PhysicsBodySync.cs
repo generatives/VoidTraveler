@@ -20,10 +20,13 @@ namespace VoidTraveler.Physics
             ref var transform = ref entity.Get<Transform>();
             ref var constructBody = ref entity.Get<PhysicsBody>();
 
-            transform.WorldPosition = constructBody.Body.Position;
-            transform.WorldRotation = constructBody.Body.Rotation;
+            if(transform.WorldPosition != constructBody.Body.Position || transform.WorldRotation != constructBody.Body.Rotation)
+            {
+                transform.WorldPosition = constructBody.Body.Position;
+                transform.WorldRotation = constructBody.Body.Rotation;
 
-            entity.Set(transform);
+                entity.Set(transform);
+            }
         }
     }
 }

@@ -53,56 +53,6 @@ namespace VoidTraveler
             Message<EntityMessage<ConstructMessage>>();
             Message<EntityMessage<ConstructPilotingAction>>();
 
-            var serverScene = new Scene();
-            var serverSystems = new List<ISystem<ServerSystemUpdate>>();
-
-            serverSystems.Add(new EntityExistenceSender(serverScene.World));
-            serverSystems.Add(new TransformInitServerSystem(serverScene.World));
-            serverSystems.Add(new TransformChangeServerSystem(serverScene.World));
-            serverSystems.Add(new PlayerStateServerSystem(serverScene.World));
-            serverSystems.Add(new ProjectileServerSystem(serverScene.World));
-            serverSystems.Add(new CameraServerSystem(serverScene.World));
-            serverSystems.Add(new ConstructServerSystem(serverScene.World));
-
-            serverScene.RenderingSystems.Add(new ConstructRenderer(serverScene.World));
-            serverScene.RenderingSystems.Add(new PlayerRenderer(serverScene.World));
-            serverScene.RenderingSystems.Add(new ProjectileRenderer(serverScene.World));
-
-            var physicsSystem = new PhysicsSystem();
-            serverScene.LogicSystems.Add(new ConstructBodyGenerator(physicsSystem, serverScene.World));
-            serverScene.LogicSystems.Add(physicsSystem);
-            serverScene.LogicSystems.Add(new PhysicsBodySync(serverScene.World));
-            serverScene.LogicSystems.Add(new ConstructPilotingApplier(serverScene.World));
-            serverScene.LogicSystems.Add(new ConstructPilotSystem(serverScene.World));
-
-            serverScene.LogicSystems.Add(new NetworkedPlayerInputReciever(serverScene.World));
-            serverScene.LogicSystems.Add(new NetworkedPlayerFiringReciever(serverScene.World));
-            serverScene.LogicSystems.Add(new PlayerMovementSystem(physicsSystem, serverScene.World));
-
-            serverScene.LogicSystems.Add(new ProjectileMovementSystem(physicsSystem, serverScene.World));
-            serverScene.LogicSystems.Add(new EphemoralEntityRemover(serverScene.World));
-
-            var construct = serverScene.World.CreateEntity();
-            construct.Set(new NetworkedEntity() { Id = Guid.NewGuid() });
-            construct.Set(new Transform() { Position = new Vector2(0, 0) });
-            construct.Set(CreateBoundedConstruct(20, 10, 20));
-            construct.Set(new ConstructPilotable());
-            construct.Set(new PhysicsBody());
-            construct.Set(new Camera());
-
-            var otherConstruct = serverScene.World.CreateEntity();
-            otherConstruct.Set(new NetworkedEntity() { Id = Guid.NewGuid() });
-            otherConstruct.Set(new Transform() { Position = new Vector2(300, 0) });
-            otherConstruct.Set(CreateBoundedConstruct(20, 10, 10));
-            otherConstruct.Set(new PhysicsBody());
-
-            var player = serverScene.World.CreateEntity();
-            player.Set(new NetworkedEntity() { Id = Guid.NewGuid() });
-            player.Set(new Transform() { Position = new Vector2(0, 0), Parent = construct });
-            player.Set(new Player() { Radius = 10, Colour = RgbaFloat.Blue, MoveSpeed = 100, CurrentConstruct = construct });
-
-            var server = new Server(serverScene, serverSystems, _recievers, _serializers);
-
             var clientScene = new Scene();
             var clientSystems = new List<ISystem<ClientSystemUpdate>>();
 
@@ -130,11 +80,9 @@ namespace VoidTraveler
             clientSystems.Add(new ConstructPilotingClientSystem(clientScene.World));
 
             var client = new Client(clientScene, clientSystems, _recievers, _serializers);
-
-            var serverTask = server.Run();
             var clientTask = client.Run();
 
-            Task.WaitAll(serverTask, clientTask);
+            Task.WaitAll( clientTask);
         }
 
         private static void Message<T>()
@@ -151,22 +99,6 @@ namespace VoidTraveler
                 MessagePackSerializer.Serialize(stream, (T)message, _serializerOptions);
             };
             _messageId++;
-        }
-
-        private static Construct CreateBoundedConstruct(float tileSize, int width, int height)
-        {
-            var construct = new Construct(width, height, tileSize);
-
-            for (int x = 0; x < width; x++)
-            {
-                for (int y = 0; y < height; y++)
-                {
-                    var edge = x == 0 || x == width - 1 || y == 0 || y == height - 1;
-                    construct[x, y] = new ConstructTile() { Exists = true, Collides = edge, Colour = edge ? RgbaFloat.Grey : RgbaFloat.White };
-                }
-            }
-
-            return construct;
         }
     }
 }

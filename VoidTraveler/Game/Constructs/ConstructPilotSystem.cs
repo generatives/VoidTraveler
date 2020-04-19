@@ -41,7 +41,7 @@ namespace VoidTraveler.Game.Constructs
 
             if(force != Vector2.Zero)
             {
-                force *= 100;
+                force *= 50;
                 force = Vector2.Transform(force, Matrix3x2.CreateRotation(body.Body.Rotation));
                 body.Body.ApplyForce(force);
             }
@@ -58,7 +58,7 @@ namespace VoidTraveler.Game.Constructs
 
             if(rotationForce != 0)
             {
-                body.Body.ApplyAngularImpulse(rotationForce * 300000);
+                body.Body.ApplyAngularImpulse(rotationForce * 10);
                 body.Body.Awake = true;
             }
 

@@ -12,6 +12,8 @@ namespace VoidTraveler.Game.Projectiles
 {
     public class ProjectileRenderer : AEntitySystem<DrawDevice>
     {
+        private float _graphicsScale = 20f;
+
         public ProjectileRenderer(World world) : base(world.GetEntities().With<Transform>().With<Projectile>().AsSet())
         {
         }
@@ -21,7 +23,7 @@ namespace VoidTraveler.Game.Projectiles
             ref var projectile = ref entity.Get<Projectile>();
             ref var transform = ref entity.Get<Transform>();
 
-            Primitives2D.SpriteBatchExtensions.DrawCircle(device, transform.WorldPosition, projectile.Radius, 8, projectile.Colour);
+            Primitives2D.SpriteBatchExtensions.DrawCircle(device, transform.WorldPosition * Settings.GRAPHICS_SCALE, projectile.Radius * Settings.GRAPHICS_SCALE, 8, projectile.Colour);
         }
     }
 }

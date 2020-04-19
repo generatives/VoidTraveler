@@ -1,8 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <OutputType>Exe</OutputType>
+    <OutputType>Library</OutputType>
     <TargetFramework>netcoreapp3.0</TargetFramework>
+    <ApplicationIcon />
+    <StartupObject />
   </PropertyGroup>
 
   <ItemGroup>
@@ -10,7 +12,7 @@
     <PackageReference Include="MessagePack" Version="2.1.115" />
     <PackageReference Include="Ruffles" Version="10.0.0" />
     <PackageReference Include="Tortuga" Version="1.0.4" />
-    <PackageReference Include="Tortuga.DesktopPlatform" Version="1.0.4" />
+    <PackageReference Include="Tortuga.DesktopPlatform" Version="1.0.5" />
     <PackageReference Include="Veldrid.ImGui" Version="5.72.0" />
   </ItemGroup>
 

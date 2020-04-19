@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Numerics;
 using System.Text;
 using Tortuga.Graphics;
+using Veldrid;
 using VoidTraveler.Game.Constructs;
 using VoidTraveler.Game.Core;
 
@@ -22,7 +23,7 @@ namespace VoidTraveler.Game.Player
             ref var player = ref entity.Get<Player>();
             ref var transform = ref entity.Get<Transform>();
 
-            Primitives2D.SpriteBatchExtensions.DrawCircle(device, transform.WorldPosition, player.Radius, 8, player.Colour);
+            Primitives2D.SpriteBatchExtensions.DrawCircle(device, transform.WorldPosition * Settings.GRAPHICS_SCALE, player.Radius * Settings.GRAPHICS_SCALE, 8, player.Colour);
         }
     }
 }

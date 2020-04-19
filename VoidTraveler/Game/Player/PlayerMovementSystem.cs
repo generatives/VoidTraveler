@@ -41,9 +41,9 @@ namespace VoidTraveler.Game.Player
                 projectile.Set(new Projectile()
                 {
                     Colour = RgbaFloat.Red,
-                    Radius = 2.5f,
+                    Radius = 0.25f,
                     MoveDirection = transform.ParentTransform.GetLocal(player.FireAt) - transform.ParentTransform.GetLocal(transform.WorldPosition),
-                    MoveSpeed = 300f
+                    MoveSpeed = 10f
                 });
                 player.Fire = false;
             }
