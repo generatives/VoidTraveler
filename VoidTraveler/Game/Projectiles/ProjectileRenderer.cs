@@ -12,8 +12,6 @@ namespace VoidTraveler.Game.Projectiles
 {
     public class ProjectileRenderer : AEntitySystem<DrawDevice>
     {
-        private float _graphicsScale = 20f;
-
         public ProjectileRenderer(World world) : base(world.GetEntities().With<Transform>().With<Projectile>().AsSet())
         {
         }

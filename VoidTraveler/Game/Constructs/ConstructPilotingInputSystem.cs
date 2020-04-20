@@ -51,9 +51,7 @@ namespace VoidTraveler.Game.Constructs
 
     public class ConstructPilotingApplier : EntityMessageApplier<LogicUpdate, ConstructPilotingAction>
     {
-        public ConstructPilotingApplier(World world) : base(world)
-        {
-        }
+        public ConstructPilotingApplier(NetworkedEntities entities, World world) : base(entities, world) { }
 
         protected override void Update(LogicUpdate state, in ConstructPilotingAction messageData, in Entity entity)
         {

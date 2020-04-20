@@ -13,13 +13,13 @@ namespace VoidTraveler.Game.Core
     [With(typeof(TransformLerp))]
     public class TransformLerper : AEntitySystem<LogicUpdate>
     {
-        private readonly float SERVER_FRAME_TIME = 0.045f;
+        private readonly float SERVER_FRAME_TIME = 0.05f;
 
-        private EntityMap<NetworkedEntity> _entities;
+        private NetworkedEntities _entities;
 
-        public TransformLerper(World world) : base(world)
+        public TransformLerper(NetworkedEntities networkedEntities, World world) : base(world)
         {
-            _entities = world.GetEntities().With<NetworkedEntity>().AsMap<NetworkedEntity>();
+            _entities = networkedEntities;
         }
 
         protected override void Update(LogicUpdate state, in Entity entity)
@@ -27,29 +27,31 @@ namespace VoidTraveler.Game.Core
             ref var transform = ref entity.Get<Transform>();
             ref var lerp = ref entity.Get<TransformLerp>();
 
-            if (!lerp.CurrentTarget.HasValue || lerp.Progress >= SERVER_FRAME_TIME)
+            if (!lerp.CurrentTarget.HasValue)
             {
-                if(lerp.Messages.Any())
-                {
-                    lerp.CurrentTarget = lerp.Messages.Dequeue();
-                    transform.Parent = lerp.CurrentTarget.Value.ParentId.HasValue ? _entities[new NetworkedEntity() { Id = lerp.CurrentTarget.Value.ParentId.Value }] : (Entity?)null;
-                }
-                else
-                {
-                    lerp.CurrentTarget = null;
-                }
-                lerp.Progress = 0;
+                DequeueNextTarget(transform, ref lerp);
+                entity.Set(transform);
             }
 
-            if(lerp.CurrentTarget.HasValue)
+            if (lerp.CurrentTarget.HasValue)
             {
-                var target = lerp.CurrentTarget.Value;
-                transform.Position += (target.Position - transform.Position) * ((float)state.DeltaSeconds / SERVER_FRAME_TIME);
-                transform.Rotation += (target.Rotation - transform.Rotation) * ((float)state.DeltaSeconds / SERVER_FRAME_TIME);
-                transform.Scale += (target.Scale - transform.Scale) * ((float)state.DeltaSeconds / SERVER_FRAME_TIME);
-                lerp.Progress += (float)state.DeltaSeconds;
+                var frameTime = (float)state.DeltaSeconds + (lerp.Messages.Count - 2) * 0.002f;
+                if (lerp.Progress > SERVER_FRAME_TIME)
+                {
+                    var remainingOnTarget = SERVER_FRAME_TIME - lerp.Progress;
+                    LerpTransform(transform, lerp.CurrentTarget.Value, remainingOnTarget, remainingOnTarget);
+                    DequeueNextTarget(transform, ref lerp);
+                    entity.Set(transform);
+                    frameTime = frameTime - remainingOnTarget;
+                }
 
-                entity.Set(transform);
+                if(lerp.CurrentTarget.HasValue)
+                {
+                    LerpTransform(transform, lerp.CurrentTarget.Value, SERVER_FRAME_TIME - lerp.Progress, frameTime);
+                    entity.Set(transform);
+                }
+
+                lerp.Progress += frameTime;
             }
 
             InfoViewer.Values[$"Stack {entity.ToString()}"] = lerp.Messages.Count.ToString();
@@ -57,10 +59,31 @@ namespace VoidTraveler.Game.Core
             entity.Set(lerp);
         }
 
+        private void DequeueNextTarget(Transform transform, ref TransformLerp lerp)
+        {
+            if (lerp.Messages.Any())
+            {
+                lerp.CurrentTarget = lerp.Messages.Dequeue();
+                transform.Parent = lerp.CurrentTarget.Value.ParentId.HasValue ? _entities[lerp.CurrentTarget.Value.ParentId.Value] : (Entity?)null;
+            }
+            else
+            {
+                lerp.CurrentTarget = null;
+            }
+            lerp.Progress = 0;
+        }
+
+        private void LerpTransform(Transform transform, TransformMessage target, float remainingTime, float deltaTime)
+        {
+            var multiplier = deltaTime / remainingTime;
+            transform.Position += (target.Position - transform.Position) * multiplier;
+            transform.Rotation += (target.Rotation - transform.Rotation) * multiplier;
+            transform.Scale += (target.Scale - transform.Scale) * multiplier;
+        }
+
         public override void Dispose()
         {
             base.Dispose();
-            _entities.Dispose();
         }
     }
 }

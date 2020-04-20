@@ -89,7 +89,7 @@ namespace VoidTraveler.Game.Core
 
     public class TransformMessageApplier : EntityMessageApplier<LogicUpdate, TransformMessage>
     {
-        public TransformMessageApplier(World world) : base(world) { }
+        public TransformMessageApplier(NetworkedEntities entities, World world) : base(entities, world) { }
 
         protected override void Update(LogicUpdate state, in TransformMessage message, in Entity entity)
         {
@@ -108,7 +108,7 @@ namespace VoidTraveler.Game.Core
                     Position = message.Position,
                     Rotation = message.Rotation,
                     Scale = message.Scale,
-                    Parent = message.ParentId.HasValue ? Entities[new NetworkedEntity() { Id = message.ParentId.Value }] : (Entity?)null
+                    Parent = message.ParentId.HasValue ? Entities[message.ParentId.Value] : (Entity?)null
                 });
             }
             else

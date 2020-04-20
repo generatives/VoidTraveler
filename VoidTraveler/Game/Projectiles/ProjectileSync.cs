@@ -47,9 +47,7 @@ namespace VoidTraveler.Game.Projectiles
 
     public class ProjectileMessageApplier : EntityMessageApplier<LogicUpdate, ProjectileMessage>
     {
-        public ProjectileMessageApplier(World world) : base(world)
-        {
-        }
+        public ProjectileMessageApplier(NetworkedEntities entities, World world) : base(entities, world) { }
 
         protected override void Update(LogicUpdate state, in ProjectileMessage messageData, in Entity entity)
         {

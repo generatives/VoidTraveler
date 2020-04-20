@@ -43,11 +43,11 @@ namespace VoidTraveler.Game.Player
 
     public class PlayerStateReciever : EntityMessageApplier<LogicUpdate, PlayerMessage>
     {
-        public PlayerStateReciever(World world) : base(world) { }
+        public PlayerStateReciever(NetworkedEntities entities, World world) : base(entities, world) { }
 
         protected override void Update(LogicUpdate state, in PlayerMessage messageData, in Entity entity)
         {
-            entity.Set(new Player() { Radius = messageData.Radius, Colour = messageData.Colour, CurrentConstruct = Entities[new NetworkedEntity() { Id = messageData.CurrentConstruct }] });
+            entity.Set(new Player() { Radius = messageData.Radius, Colour = messageData.Colour, CurrentConstruct = Entities[messageData.CurrentConstruct] });
         }
     }
 }

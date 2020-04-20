@@ -56,6 +56,8 @@ namespace VoidTraveler
             var serverScene = new Scene();
             var serverSystems = new List<ISystem<ServerSystemUpdate>>();
 
+            var serverNetworkedEntities = new NetworkedEntities(serverScene.World);
+
             serverSystems.Add(new EntityExistenceSender(serverScene.World));
             serverSystems.Add(new TransformInitServerSystem(serverScene.World));
             serverSystems.Add(new TransformChangeServerSystem(serverScene.World));
@@ -72,11 +74,12 @@ namespace VoidTraveler
             serverScene.LogicSystems.Add(new ConstructBodyGenerator(physicsSystem, serverScene.World));
             serverScene.LogicSystems.Add(physicsSystem);
             serverScene.LogicSystems.Add(new PhysicsBodySync(serverScene.World));
-            serverScene.LogicSystems.Add(new ConstructPilotingApplier(serverScene.World));
+            serverScene.LogicSystems.Add(new ConstructPilotingApplier(serverNetworkedEntities, serverScene.World));
             serverScene.LogicSystems.Add(new ConstructPilotSystem(serverScene.World));
 
-            serverScene.LogicSystems.Add(new NetworkedPlayerInputReciever(serverScene.World));
-            serverScene.LogicSystems.Add(new NetworkedPlayerFiringReciever(serverScene.World));
+            serverScene.LogicSystems.Add(new NetworkedPlayerInputReciever(serverNetworkedEntities, serverScene.World));
+            serverScene.LogicSystems.Add(new NetworkedPlayerFiringReciever(serverNetworkedEntities, serverScene.World));
+
             serverScene.LogicSystems.Add(new PlayerMovementSystem(physicsSystem, serverScene.World));
 
             serverScene.LogicSystems.Add(new ProjectileMovementSystem(physicsSystem, serverScene.World));
@@ -106,6 +109,8 @@ namespace VoidTraveler
             var clientScene = new Scene();
             var clientSystems = new List<ISystem<ClientSystemUpdate>>();
 
+            var networkedEntities = new NetworkedEntities(clientScene.World);
+
             clientScene.RenderingSystems.Add(new ConstructRenderer(clientScene.World));
             clientScene.RenderingSystems.Add(new PlayerRenderer(clientScene.World));
             clientScene.RenderingSystems.Add(new ProjectileRenderer(clientScene.World));
@@ -113,15 +118,15 @@ namespace VoidTraveler
             //clientScene.LogicSystems.Add(new PlayerInputSystem(clientScene.World));
             clientScene.LogicSystems.Add(new EntityAdder(clientScene.World));
 
-            clientScene.LogicSystems.Add(new PlayerStateReciever(clientScene.World));
-            clientScene.LogicSystems.Add(new TransformMessageApplier(clientScene.World));
-            clientScene.LogicSystems.Add(new ProjectileMessageApplier(clientScene.World));
-            clientScene.LogicSystems.Add(new CameraMessageApplier(clientScene.World));
-            clientScene.LogicSystems.Add(new ConstructMessageApplier(clientScene.World));
+            clientScene.LogicSystems.Add(new PlayerStateReciever(networkedEntities, clientScene.World));
+            clientScene.LogicSystems.Add(new TransformMessageApplier(networkedEntities, clientScene.World));
+            clientScene.LogicSystems.Add(new ProjectileMessageApplier(networkedEntities, clientScene.World));
+            clientScene.LogicSystems.Add(new CameraMessageApplier(networkedEntities, clientScene.World));
+            clientScene.LogicSystems.Add(new ConstructMessageApplier(networkedEntities, clientScene.World));
 
-            clientScene.LogicSystems.Add(new TransformLerper(clientScene.World));
+            clientScene.LogicSystems.Add(new TransformLerper(networkedEntities, clientScene.World));
 
-            clientScene.LogicSystems.Add(new EntityRemover(clientScene.World));
+            clientScene.LogicSystems.Add(new EntityRemover(networkedEntities, clientScene.World));
 
             clientScene.LogicSystems.Add(new EphemoralEntityRemover(clientScene.World));
 

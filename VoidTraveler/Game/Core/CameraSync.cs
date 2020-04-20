@@ -32,9 +32,7 @@ namespace VoidTraveler.Game.Core
 
     public class CameraMessageApplier : EntityMessageApplier<LogicUpdate, CameraMessage>
     {
-        public CameraMessageApplier(World world) : base(world)
-        {
-        }
+        public CameraMessageApplier(NetworkedEntities entities, World world) : base(entities, world) { }
 
         protected override void Update(LogicUpdate state, in CameraMessage action, in Entity entity)
         {

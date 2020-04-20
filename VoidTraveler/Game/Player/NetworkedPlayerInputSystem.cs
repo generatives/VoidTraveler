@@ -53,9 +53,7 @@ namespace VoidTraveler.Game.Player
 
     public class NetworkedPlayerInputReciever : EntityMessageApplier<LogicUpdate, PlayerMovementAction>
     {
-        public NetworkedPlayerInputReciever(World world) : base(world)
-        {
-        }
+        public NetworkedPlayerInputReciever(NetworkedEntities entities, World world) : base(entities, world) { }
 
         protected override void Update(LogicUpdate state, in PlayerMovementAction action, in Entity entity)
         {
@@ -99,9 +97,7 @@ namespace VoidTraveler.Game.Player
 
     public class NetworkedPlayerFiringReciever : EntityMessageApplier<LogicUpdate, PlayerFireAction>
     {
-        public NetworkedPlayerFiringReciever(World world) : base(world)
-        {
-        }
+        public NetworkedPlayerFiringReciever(NetworkedEntities entities, World world) : base(entities, world) { }
 
         protected override void Update(LogicUpdate state, in PlayerFireAction action, in Entity entity)
         {

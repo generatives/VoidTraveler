@@ -49,7 +49,7 @@ namespace VoidTraveler.Game.Constructs
 
     public class ConstructMessageApplier : EntityMessageApplier<LogicUpdate, ConstructMessage>
     {
-        public ConstructMessageApplier(World world) : base(world) { }
+        public ConstructMessageApplier(NetworkedEntities entities, World world) : base(entities, world) { }
 
         protected override void Update(LogicUpdate state, in ConstructMessage messageData, in Entity entity)
         {

@@ -12,8 +12,6 @@ namespace VoidTraveler.Game.Constructs
 {
     public class ConstructRenderer : AEntitySystem<DrawDevice>
     {
-        private float _graphicsScale = 20f;
-
         public ConstructRenderer(World world) : base(world.GetEntities().With<Transform>().With<Construct>().AsSet())
         {
         }

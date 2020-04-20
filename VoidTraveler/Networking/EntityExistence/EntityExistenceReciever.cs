@@ -23,9 +23,7 @@ namespace VoidTraveler.Networking.EntityExistence
     }
     public class EntityRemover : EntityMessageApplier<LogicUpdate, EntityRemoved>
     {
-        public EntityRemover(World world) : base(world)
-        {
-        }
+        public EntityRemover(NetworkedEntities entities, World world) : base(entities, world) { }
 
         protected override void Update(LogicUpdate state, in EntityRemoved messageData, in Entity entity)
         {
