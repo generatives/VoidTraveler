@@ -101,21 +101,21 @@ namespace VoidTraveler.Game.Core
             return Vector2.Transform(local, WorldMatrix);
         }
 
-        public Matrix3x2 GetLengthScaledMatrix(float lengthScale)
+        public Matrix3x2 GetPositionScaledMatrix(float positionScale)
         {
-            return Matrix3x2.CreateScale(Scale * lengthScale) *
+            return Matrix3x2.CreateScale(Scale) *
                 Matrix3x2.CreateRotation(Rotation) *
-                Matrix3x2.CreateTranslation(Position * lengthScale);
+                Matrix3x2.CreateTranslation(Position * positionScale);
         }
 
-        public Matrix3x2 GetLengthScaledWorldMatrix(float lengthScale)
+        public Matrix3x2 GetPositionScaledWorldMatrix(float positionScale)
         {
-            return IsInheiritingParentTransform? ParentTransform.GetWorldMatrix(GetLengthScaledMatrix(lengthScale)) : GetLengthScaledMatrix(lengthScale);
+            return IsInheiritingParentTransform? ParentTransform.GetWorldMatrix(GetPositionScaledMatrix(positionScale)) : GetPositionScaledMatrix(positionScale);
         }
 
-        public Matrix4x4 GetCameraMatrix(float distanceScale)
+        public Matrix4x4 GetCameraMatrix(float positionScale)
         {
-            return Matrix4x4.CreateTranslation(-Position.X * distanceScale, -Position.Y * distanceScale, 0f) * Matrix4x4.CreateRotationZ(-Rotation);
+            return Matrix4x4.CreateTranslation(-Position.X * positionScale, -Position.Y * positionScale, 0f) * Matrix4x4.CreateRotationZ(-Rotation);
         }
     }
 }

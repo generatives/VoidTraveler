@@ -20,6 +20,8 @@ namespace VoidTraveler.Game.Core
         public float Rotation;
         [Key(3)]
         public Vector2 Scale;
+        [Key(4)]
+        public float DeltaTime;
     }
 
     [With(typeof(NetworkedEntity))]
@@ -43,10 +45,12 @@ namespace VoidTraveler.Game.Core
                 Id = netEntity.Id,
                 Data = new TransformMessage()
                 {
+                    
                     ParentId = parentId,
                     Position = transform.Position,
                     Rotation = transform.Rotation,
-                    Scale = transform.Scale
+                    Scale = transform.Scale,
+                    DeltaTime = (float)state.DeltaTime
                 }
             };
 
@@ -78,7 +82,8 @@ namespace VoidTraveler.Game.Core
                         ParentId = parentId,
                         Position = transform.Position,
                         Rotation = transform.Rotation,
-                        Scale = transform.Scale
+                        Scale = transform.Scale,
+                        DeltaTime = (float)state.DeltaTime
                     }
                 };
 

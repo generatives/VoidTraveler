@@ -96,6 +96,7 @@ namespace VoidTraveler
         {
             var serverUpdate = new ServerSystemUpdate()
             {
+                DeltaTime = deltaTime,
                 Messages = new List<object>(),
                 NewClients = _newConnections.Any(),
                 NewClientMessages = new List<object>()

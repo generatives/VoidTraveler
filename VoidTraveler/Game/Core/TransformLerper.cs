@@ -35,19 +35,21 @@ namespace VoidTraveler.Game.Core
 
             if (lerp.CurrentTarget.HasValue)
             {
+                var serverFrameTime = lerp.CurrentTarget.Value.DeltaTime;
                 var frameTime = (float)state.DeltaSeconds + (lerp.Messages.Count - 2) * 0.002f;
-                if (lerp.Progress > SERVER_FRAME_TIME)
+                if (lerp.Progress > serverFrameTime)
                 {
-                    var remainingOnTarget = SERVER_FRAME_TIME - lerp.Progress;
+                    var remainingOnTarget = serverFrameTime - lerp.Progress;
                     LerpTransform(transform, lerp.CurrentTarget.Value, remainingOnTarget, remainingOnTarget);
                     DequeueNextTarget(transform, ref lerp);
                     entity.Set(transform);
+                    serverFrameTime = lerp.CurrentTarget?.DeltaTime ?? 0f;
                     frameTime = frameTime - remainingOnTarget;
                 }
 
                 if(lerp.CurrentTarget.HasValue)
                 {
-                    LerpTransform(transform, lerp.CurrentTarget.Value, SERVER_FRAME_TIME - lerp.Progress, frameTime);
+                    LerpTransform(transform, lerp.CurrentTarget.Value, serverFrameTime - lerp.Progress, frameTime);
                     entity.Set(transform);
                 }
 
