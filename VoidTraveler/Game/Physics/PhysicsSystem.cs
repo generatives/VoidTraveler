@@ -13,9 +13,9 @@ namespace VoidTraveler.Game.Physics
 
         public bool IsEnabled { get; set; } = true;
 
-        public PhysicsSystem()
+        public PhysicsSystem(World world)
         {
-            World = new World(Vector2.Zero);
+            World = world;
         }
 
         public void Update(LogicUpdate state)

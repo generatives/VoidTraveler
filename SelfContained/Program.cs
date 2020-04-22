@@ -27,6 +27,8 @@ using VoidTraveler.Game.Core.Ephemoral;
 using System.IO;
 using MessagePack;
 using MessagePack.Resolvers;
+using VoidTraveler.Scenes;
+using Singularity;
 
 namespace VoidTraveler
 {
@@ -53,37 +55,42 @@ namespace VoidTraveler
             Message<EntityMessage<ConstructMessage>>();
             Message<EntityMessage<ConstructPilotingAction>>();
 
-            var serverScene = new Scene();
-            var serverSystems = new List<ISystem<ServerSystemUpdate>>();
+            var serverContainer = new Container(builder =>
+            {
+                builder.Register<World>(c => c.With(Lifetimes.PerContainer));
+                builder.Register<FarseerPhysics.Dynamics.World>(c => c.Inject(() => new FarseerPhysics.Dynamics.World(Vector2.Zero)).With(Lifetimes.PerContainer));
 
-            var serverNetworkedEntities = new NetworkedEntities(serverScene.World);
+                builder.Register<ISystem<LogicUpdate>, ConstructBodyGenerator>(c => c.With(Lifetimes.PerContainer));
+                builder.Register<ISystem<LogicUpdate>, PhysicsSystem>(c => c.With(Lifetimes.PerContainer));
+                builder.Register<ISystem<LogicUpdate>, PhysicsBodySync>(c => c.With(Lifetimes.PerContainer));
+                builder.Register<ISystem<LogicUpdate>, ConstructPilotingApplier>(c => c.With(Lifetimes.PerContainer));
+                builder.Register<ISystem<LogicUpdate>, ConstructPilotSystem>(c => c.With(Lifetimes.PerContainer));
 
-            serverSystems.Add(new EntityExistenceSender(serverScene.World));
-            serverSystems.Add(new TransformInitServerSystem(serverScene.World));
-            serverSystems.Add(new TransformChangeServerSystem(serverScene.World));
-            serverSystems.Add(new PlayerStateServerSystem(serverScene.World));
-            serverSystems.Add(new ProjectileServerSystem(serverScene.World));
-            serverSystems.Add(new CameraServerSystem(serverScene.World));
-            serverSystems.Add(new ConstructServerSystem(serverScene.World));
+                builder.Register<ISystem<LogicUpdate>, NetworkedPlayerInputReciever>(c => c.With(Lifetimes.PerContainer));
+                builder.Register<ISystem<LogicUpdate>, NetworkedPlayerFiringReciever>(c => c.With(Lifetimes.PerContainer));
 
-            serverScene.RenderingSystems.Add(new ConstructRenderer(serverScene.World));
-            serverScene.RenderingSystems.Add(new PlayerRenderer(serverScene.World));
-            serverScene.RenderingSystems.Add(new ProjectileRenderer(serverScene.World));
+                builder.Register<ISystem<LogicUpdate>, PlayerMovementSystem>(c => c.With(Lifetimes.PerContainer));
 
-            var physicsSystem = new PhysicsSystem();
-            serverScene.LogicSystems.Add(new ConstructBodyGenerator(physicsSystem, serverScene.World));
-            serverScene.LogicSystems.Add(physicsSystem);
-            serverScene.LogicSystems.Add(new PhysicsBodySync(serverScene.World));
-            serverScene.LogicSystems.Add(new ConstructPilotingApplier(serverNetworkedEntities, serverScene.World));
-            serverScene.LogicSystems.Add(new ConstructPilotSystem(serverScene.World));
+                builder.Register<ISystem<LogicUpdate>, ProjectileMovementSystem>(c => c.With(Lifetimes.PerContainer));
+                builder.Register<ISystem<LogicUpdate>, EphemoralEntityRemover>(c => c.With(Lifetimes.PerContainer));
 
-            serverScene.LogicSystems.Add(new NetworkedPlayerInputReciever(serverNetworkedEntities, serverScene.World));
-            serverScene.LogicSystems.Add(new NetworkedPlayerFiringReciever(serverNetworkedEntities, serverScene.World));
+                builder.Register<NetworkedEntities>(c => c.With(Lifetimes.PerContainer));
+                builder.Register<ISystem<ServerSystemUpdate>, EntityExistenceSender>(c => c.With(Lifetimes.PerContainer));
+                builder.Register<ISystem<ServerSystemUpdate>, TransformInitServerSystem>(c => c.With(Lifetimes.PerContainer));
+                builder.Register<ISystem<ServerSystemUpdate>, TransformChangeServerSystem>(c => c.With(Lifetimes.PerContainer));
+                builder.Register<ISystem<ServerSystemUpdate>, PlayerStateServerSystem>(c => c.With(Lifetimes.PerContainer));
+                builder.Register<ISystem<ServerSystemUpdate>, ProjectileServerSystem>(c => c.With(Lifetimes.PerContainer));
+                builder.Register<ISystem<ServerSystemUpdate>, CameraServerSystem>(c => c.With(Lifetimes.PerContainer));
+                builder.Register<ISystem<ServerSystemUpdate>, ConstructServerSystem>(c => c.With(Lifetimes.PerContainer));
+            });
 
-            serverScene.LogicSystems.Add(new PlayerMovementSystem(physicsSystem, serverScene.World));
+            var serverScene = new Scene(
+                serverContainer.GetInstance<World>(),
+                serverContainer.GetInstance<List<ISystem<LogicUpdate>>>(),
+                serverContainer.GetInstance<List<ISystem<DrawDevice>>>()
+                );
 
-            serverScene.LogicSystems.Add(new ProjectileMovementSystem(physicsSystem, serverScene.World));
-            serverScene.LogicSystems.Add(new EphemoralEntityRemover(serverScene.World));
+            var server = new Server(serverScene, serverContainer.GetInstance<List<ISystem<ServerSystemUpdate>>>(), _recievers, _serializers);
 
             var construct = serverScene.World.CreateEntity();
             construct.Set(new NetworkedEntity() { Id = Guid.NewGuid() });
@@ -104,37 +111,38 @@ namespace VoidTraveler
             player.Set(new Transform() { Position = new Vector2(0, 0), Parent = construct });
             player.Set(new Player() { Radius = 0.5f, Colour = RgbaFloat.Blue, MoveSpeed = 5, CurrentConstruct = construct });
 
-            var server = new Server(serverScene, serverSystems, _recievers, _serializers);
+            var clientContainer = new Container((builder) =>
+            {
+                builder.Register<World>(c => c.With(Lifetimes.PerContainer));
 
-            var clientScene = new Scene();
-            var clientSystems = new List<ISystem<ClientSystemUpdate>>();
+                builder.Register<ISystem<DrawDevice>, ConstructRenderer>(c => c.With(Lifetimes.PerContainer));
+                builder.Register<ISystem<DrawDevice>, PlayerRenderer>(c => c.With(Lifetimes.PerContainer));
+                builder.Register<ISystem<DrawDevice>, ProjectileRenderer>(c => c.With(Lifetimes.PerContainer));
 
-            var networkedEntities = new NetworkedEntities(clientScene.World);
+                builder.Register<NetworkedEntities>(c => c.With(Lifetimes.PerContainer));
 
-            clientScene.RenderingSystems.Add(new ConstructRenderer(clientScene.World));
-            clientScene.RenderingSystems.Add(new PlayerRenderer(clientScene.World));
-            clientScene.RenderingSystems.Add(new ProjectileRenderer(clientScene.World));
+                builder.Register<ISystem<LogicUpdate>, EntityAdder>(c => c.With(Lifetimes.PerContainer));
+                builder.Register<ISystem<LogicUpdate>, PlayerStateReciever>(c => c.With(Lifetimes.PerContainer));
+                builder.Register<ISystem<LogicUpdate>, TransformMessageApplier>(c => c.With(Lifetimes.PerContainer));
+                builder.Register<ISystem<LogicUpdate>, ProjectileMessageApplier>(c => c.With(Lifetimes.PerContainer));
+                builder.Register<ISystem<LogicUpdate>, CameraMessageApplier>(c => c.With(Lifetimes.PerContainer));
+                builder.Register<ISystem<LogicUpdate>, ConstructMessageApplier>(c => c.With(Lifetimes.PerContainer));
+                builder.Register<ISystem<LogicUpdate>, TransformLerper>(c => c.With(Lifetimes.PerContainer));
+                builder.Register<ISystem<LogicUpdate>, EntityRemover>(c => c.With(Lifetimes.PerContainer));
+                builder.Register<ISystem<LogicUpdate>, EphemoralEntityRemover>(c => c.With(Lifetimes.PerContainer));
 
-            //clientScene.LogicSystems.Add(new PlayerInputSystem(clientScene.World));
-            clientScene.LogicSystems.Add(new EntityAdder(clientScene.World));
+                builder.Register<ISystem<ClientSystemUpdate>, NetworkedPlayerInputSystem>(c => c.With(Lifetimes.PerContainer));
+                builder.Register<ISystem<ClientSystemUpdate>, NetworkedPlayerFiringSystem>(c => c.With(Lifetimes.PerContainer));
+                builder.Register<ISystem<ClientSystemUpdate>, ConstructPilotingClientSystem>(c => c.With(Lifetimes.PerContainer));
+            });
 
-            clientScene.LogicSystems.Add(new PlayerStateReciever(networkedEntities, clientScene.World));
-            clientScene.LogicSystems.Add(new TransformMessageApplier(networkedEntities, clientScene.World));
-            clientScene.LogicSystems.Add(new ProjectileMessageApplier(networkedEntities, clientScene.World));
-            clientScene.LogicSystems.Add(new CameraMessageApplier(networkedEntities, clientScene.World));
-            clientScene.LogicSystems.Add(new ConstructMessageApplier(networkedEntities, clientScene.World));
+            var clientScene = new Scene(
+                clientContainer.GetInstance<World>(),
+                clientContainer.GetInstance<List<ISystem<LogicUpdate>>>(),
+                clientContainer.GetInstance<List<ISystem<DrawDevice>>>()
+                );
 
-            clientScene.LogicSystems.Add(new TransformLerper(networkedEntities, clientScene.World));
-
-            clientScene.LogicSystems.Add(new EntityRemover(networkedEntities, clientScene.World));
-
-            clientScene.LogicSystems.Add(new EphemoralEntityRemover(clientScene.World));
-
-            clientSystems.Add(new NetworkedPlayerInputSystem(clientScene.World));
-            clientSystems.Add(new NetworkedPlayerFiringSystem(clientScene.World));
-            clientSystems.Add(new ConstructPilotingClientSystem(clientScene.World));
-
-            var client = new Client(clientScene, clientSystems, _recievers, _serializers);
+            var client = new Client(clientScene, clientContainer.GetInstance<List<ISystem<ClientSystemUpdate>>>(), _recievers, _serializers);
 
             var serverTask = server.Run();
             var clientTask = client.Run();

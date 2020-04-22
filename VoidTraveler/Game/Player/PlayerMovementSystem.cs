@@ -17,12 +17,12 @@ namespace VoidTraveler.Game.Player
     [With(typeof(Transform), typeof(Player))]
     public class PlayerMovementSystem : AEntitySystem<LogicUpdate>
     {
-        private readonly PhysicsSystem _physicsSystem;
+        private readonly FarseerPhysics.Dynamics.World _physicsWorld;
         private readonly World _world;
 
-        public PlayerMovementSystem(PhysicsSystem physicsSystem, World world) : base(world)
+        public PlayerMovementSystem(FarseerPhysics.Dynamics.World physicsWorld, World world) : base(world)
         {
-            _physicsSystem = physicsSystem;
+            _physicsWorld = physicsWorld;
             _world = world;
         }
 
@@ -55,7 +55,7 @@ namespace VoidTraveler.Game.Player
                 var playerAABB = new AABB(goalWorldPosition, player.Radius * 2, player.Radius * 2);
 
                 var collided = false;
-                _physicsSystem.World.QueryAABB(
+                _physicsWorld.QueryAABB(
                     (fixture) =>
                     {
                         collided = true;

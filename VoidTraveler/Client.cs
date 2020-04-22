@@ -20,6 +20,7 @@ using VoidTraveler.Editor;
 using VoidTraveler.Game.Core;
 using VoidTraveler.Game.Core.Ephemoral;
 using VoidTraveler.Networking;
+using VoidTraveler.Scenes;
 
 namespace VoidTraveler
 {
@@ -65,7 +66,7 @@ namespace VoidTraveler
             _camerasSet = scene.World.GetEntities().With<Transform>().With<Camera>().AsSet();
 
             _editorMenu = new EditorMenu();
-            //_editorMenu.Editors.Add(new ConstructEditor());
+            _editorMenu.Editors.Add(new ConstructEditor());
             _editorMenu.Editors.Add(new InfoViewer());
 
             _client = new RuffleSocket(_clientConfig);
@@ -158,11 +159,11 @@ namespace VoidTraveler
             var imGuiWantsMouse = ImGuiNET.ImGui.GetIO().WantCaptureMouse;
 
             var cameraEntities = _camerasSet.GetEntities();
-            var cameraTransform = cameraEntities.Length > 0 ? cameraEntities[0].Get<Transform>() : default;
+            var cameraTransform = cameraEntities.Length > 0 ? cameraEntities[0].Get<Transform>() : new Transform();
 
             var inputTrackerTransform = Matrix3x2.CreateTranslation(-_window.Width / 2f, -_window.Height / 2f) *
                 Matrix3x2.CreateScale(1, -1) *
-                cameraTransform?.Matrix ?? Matrix3x2.Identity *
+                cameraTransform.Matrix *
                 Matrix3x2.CreateScale(1 / 0.8f);
 
             _cameraSpaceInputTracker.SetTransform(inputTrackerTransform);
@@ -190,9 +191,9 @@ namespace VoidTraveler
             }
 
             cameraEntities = _camerasSet.GetEntities();
-            cameraTransform = cameraEntities.Length > 0 ? cameraEntities[0].Get<Transform>() : default;
+            cameraTransform = cameraEntities.Length > 0 ? cameraEntities[0].Get<Transform>() : new Transform();
 
-            var cameraMatrix = cameraTransform?.GetCameraMatrix(Settings.GRAPHICS_SCALE) ?? Matrix4x4.Identity * Matrix4x4.CreateScale(0.8f);
+            var cameraMatrix = cameraTransform.GetCameraMatrix(Settings.GRAPHICS_SCALE) * Matrix4x4.CreateScale(0.8f);
 
             var vp = _viewport.Viewport;
             _drawDevice.Begin(cameraMatrix * _viewport.GetScalingTransform(), vp);

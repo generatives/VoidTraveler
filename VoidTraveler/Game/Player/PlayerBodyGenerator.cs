@@ -14,7 +14,7 @@ namespace VoidTraveler.Game.Player
 {
     public class PlayerBodyGenerator : PhysicsBodyGenerator<Player>
     {
-        public PlayerBodyGenerator(PhysicsSystem physicsSystem, DefaultEcs.World world) : base(physicsSystem, world)
+        public PlayerBodyGenerator(FarseerPhysics.Dynamics.World physicsWorld, DefaultEcs.World world) : base(physicsWorld, world)
         {
         }
 

@@ -13,11 +13,11 @@ namespace VoidTraveler.Game.Projectiles
 {
     public class ProjectileMovementSystem : AEntityBufferedSystem<LogicUpdate>
     {
-        private readonly PhysicsSystem _physicsSystem;
+        private readonly FarseerPhysics.Dynamics.World _physicsWorld;
 
-        public ProjectileMovementSystem(PhysicsSystem physicsSystem, World world) : base(world.GetEntities().With<Transform>().With<Projectile>().AsSet())
+        public ProjectileMovementSystem(FarseerPhysics.Dynamics.World physicsWorld, World world) : base(world.GetEntities().With<Transform>().With<Projectile>().AsSet())
         {
-            _physicsSystem = physicsSystem;
+            _physicsWorld = physicsWorld;
         }
 
         protected override void Update(LogicUpdate update, in Entity entity)
@@ -32,7 +32,7 @@ namespace VoidTraveler.Game.Projectiles
                 var playerAABB = new AABB(goalWorldPosition, projectile.Radius * 2, projectile.Radius * 2);
 
                 var collided = false;
-                _physicsSystem.World.QueryAABB(
+                _physicsWorld.QueryAABB(
                     (fixture) =>
                     {
                         collided = true;

@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using VoidTraveler.Game.Core.Ephemoral;
+using VoidTraveler.Scenes;
 
 namespace VoidTraveler
 {

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Tortuga.Platform;
+using VoidTraveler.Scenes;
 
 namespace VoidTraveler.Editor
 {

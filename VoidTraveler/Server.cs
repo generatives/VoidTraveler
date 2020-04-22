@@ -14,6 +14,7 @@ using System.Threading.Tasks;
 using VoidTraveler.Editor;
 using VoidTraveler.Game.Core.Ephemoral;
 using VoidTraveler.Networking;
+using VoidTraveler.Scenes;
 
 namespace VoidTraveler
 {

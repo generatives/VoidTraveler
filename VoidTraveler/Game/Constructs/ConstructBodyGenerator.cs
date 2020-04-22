@@ -19,7 +19,7 @@ namespace VoidTraveler.Game.Constructs
 
     public class ConstructBodyGenerator : PhysicsBodyGenerator<Construct>
     {
-        public ConstructBodyGenerator(PhysicsSystem physicsSystem, DefaultEcs.World world) : base(physicsSystem, world)
+        public ConstructBodyGenerator(FarseerPhysics.Dynamics.World physicsWorld, DefaultEcs.World world) : base(physicsWorld, world)
         {
         }
 

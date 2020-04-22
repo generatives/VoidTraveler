@@ -10,11 +10,11 @@ namespace VoidTraveler.Game.Physics
 {
     public class PhysicsBodyGenerator<TSource> : ComponentChangeSystem<LogicUpdate>
     {
-        private readonly PhysicsSystem _physicsSystem;
+        private readonly World _physicsWorld;
 
-        public PhysicsBodyGenerator(PhysicsSystem physicsSystem, DefaultEcs.World world) : base(world, typeof(TSource), typeof(Transform), typeof(PhysicsBody))
+        public PhysicsBodyGenerator(World physicsWorld, DefaultEcs.World world) : base(world, typeof(TSource), typeof(Transform), typeof(PhysicsBody))
         {
-            _physicsSystem = physicsSystem;
+            _physicsWorld = physicsWorld;
         }
 
         protected override void Compute(LogicUpdate state, in DefaultEcs.Entity e)
@@ -25,7 +25,7 @@ namespace VoidTraveler.Game.Physics
 
             if(physicsBody.Body == null)
             {
-                physicsBody.Body = new Body(_physicsSystem.World, e);
+                physicsBody.Body = new Body(_physicsWorld, e);
             }
 
             ConfigureBody(physicsBody.Body, source, transform);
@@ -39,7 +39,7 @@ namespace VoidTraveler.Game.Physics
 
             if(physicsBody.Body != null)
             {
-                _physicsSystem.World.RemoveBody(physicsBody.Body);
+                _physicsWorld.RemoveBody(physicsBody.Body);
             }
         }
     }

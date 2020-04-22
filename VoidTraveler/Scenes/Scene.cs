@@ -5,19 +5,19 @@ using System.Collections.Generic;
 using System.Text;
 using Tortuga.Graphics;
 
-namespace VoidTraveler
+namespace VoidTraveler.Scenes
 {
     public class Scene
     {
         public World World { get; private set; }
-        public List<ISystem<LogicUpdate>> LogicSystems { get; private set; }
-        public List<ISystem<DrawDevice>> RenderingSystems { get; private set; }
+        public IEnumerable<ISystem<LogicUpdate>> LogicSystems { get; private set; }
+        public IEnumerable<ISystem<DrawDevice>> RenderingSystems { get; private set; }
 
-        public Scene()
+        public Scene(World world, IEnumerable<ISystem<LogicUpdate>> logicSystems, IEnumerable<ISystem<DrawDevice>> drawSystems)
         {
-            World = new World();
-            LogicSystems = new List<ISystem<LogicUpdate>>();
-            RenderingSystems = new List<ISystem<DrawDevice>>();
+            World = world;
+            LogicSystems = logicSystems;
+            RenderingSystems = drawSystems;
         }
 
         public void Update(LogicUpdate update)
