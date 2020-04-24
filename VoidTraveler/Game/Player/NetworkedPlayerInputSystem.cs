@@ -51,11 +51,11 @@ namespace VoidTraveler.Game.Player
         }
     }
 
-    public class NetworkedPlayerInputReciever : EntityMessageApplier<LogicUpdate, PlayerMovementAction>
+    public class NetworkedPlayerInputReciever : EntityMessageApplier<PlayerMovementAction>
     {
-        public NetworkedPlayerInputReciever(NetworkedEntities entities, World world) : base(entities, world) { }
+        public NetworkedPlayerInputReciever(NetworkedEntities entities) : base(entities) { }
 
-        protected override void Update(LogicUpdate state, in PlayerMovementAction action, in Entity entity)
+        protected override void On(in PlayerMovementAction action, in Entity entity)
         {
             if (entity.Has<Player>())
             {
@@ -95,11 +95,11 @@ namespace VoidTraveler.Game.Player
         }
     }
 
-    public class NetworkedPlayerFiringReciever : EntityMessageApplier<LogicUpdate, PlayerFireAction>
+    public class NetworkedPlayerFiringReciever : EntityMessageApplier<PlayerFireAction>
     {
-        public NetworkedPlayerFiringReciever(NetworkedEntities entities, World world) : base(entities, world) { }
+        public NetworkedPlayerFiringReciever(NetworkedEntities entities) : base(entities) { }
 
-        protected override void Update(LogicUpdate state, in PlayerFireAction action, in Entity entity)
+        protected override void On(in PlayerFireAction action, in Entity entity)
         {
             if(entity.Has<Player>())
             {

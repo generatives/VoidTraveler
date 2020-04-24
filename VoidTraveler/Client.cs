@@ -59,7 +59,7 @@ namespace VoidTraveler
         private ulong _messagesSent;
         private Stopwatch _messageTimer;
 
-        public Client(Scene scene, List<ISystem<ClientSystemUpdate>> clientSystems, Dictionary<int, Action<MemoryStream, Entity>> recievers, Dictionary<Type, Action<object, MemoryStream>> serializers) :
+        public Client(Scene scene, List<ISystem<ClientSystemUpdate>> clientSystems, Dictionary<int, Action<MemoryStream, World>> recievers, Dictionary<Type, Action<object, MemoryStream>> serializers) :
             base(scene, recievers, serializers)
         {
             _clientSystems = clientSystems;

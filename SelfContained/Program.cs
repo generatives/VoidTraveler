@@ -35,7 +35,7 @@ namespace VoidTraveler
     class Program
     {
         private static byte _messageId = 0;
-        private static Dictionary<int, Action<MemoryStream, Entity>> _recievers = new Dictionary<int, Action<MemoryStream, Entity>>();
+        private static Dictionary<int, Action<MemoryStream, World>> _recievers = new Dictionary<int, Action<MemoryStream, World>>();
         private static Dictionary<Type, Action<object, MemoryStream>> _serializers = new Dictionary<Type, Action<object, MemoryStream>>();
         private static MessagePackSerializerOptions _serializerOptions;
 
@@ -60,19 +60,18 @@ namespace VoidTraveler
                 builder.Register<World>(c => c.With(Lifetimes.PerContainer));
                 builder.Register<FarseerPhysics.Dynamics.World>(c => c.Inject(() => new FarseerPhysics.Dynamics.World(Vector2.Zero)).With(Lifetimes.PerContainer));
 
+                builder.Register<IMessageReciever, ConstructPilotingApplier>(c => c.With(Lifetimes.PerContainer));
+                builder.Register<IMessageReciever, NetworkedPlayerInputReciever>(c => c.With(Lifetimes.PerContainer));
+                builder.Register<IMessageReciever, NetworkedPlayerFiringReciever>(c => c.With(Lifetimes.PerContainer));
+
                 builder.Register<ISystem<LogicUpdate>, ConstructBodyGenerator>(c => c.With(Lifetimes.PerContainer));
                 builder.Register<ISystem<LogicUpdate>, PhysicsSystem>(c => c.With(Lifetimes.PerContainer));
                 builder.Register<ISystem<LogicUpdate>, PhysicsBodySync>(c => c.With(Lifetimes.PerContainer));
-                builder.Register<ISystem<LogicUpdate>, ConstructPilotingApplier>(c => c.With(Lifetimes.PerContainer));
                 builder.Register<ISystem<LogicUpdate>, ConstructPilotSystem>(c => c.With(Lifetimes.PerContainer));
-
-                builder.Register<ISystem<LogicUpdate>, NetworkedPlayerInputReciever>(c => c.With(Lifetimes.PerContainer));
-                builder.Register<ISystem<LogicUpdate>, NetworkedPlayerFiringReciever>(c => c.With(Lifetimes.PerContainer));
 
                 builder.Register<ISystem<LogicUpdate>, PlayerMovementSystem>(c => c.With(Lifetimes.PerContainer));
 
                 builder.Register<ISystem<LogicUpdate>, ProjectileMovementSystem>(c => c.With(Lifetimes.PerContainer));
-                builder.Register<ISystem<LogicUpdate>, EphemoralEntityRemover>(c => c.With(Lifetimes.PerContainer));
 
                 builder.Register<NetworkedEntities>(c => c.With(Lifetimes.PerContainer));
                 builder.Register<ISystem<ServerSystemUpdate>, EntityExistenceSender>(c => c.With(Lifetimes.PerContainer));
@@ -91,6 +90,9 @@ namespace VoidTraveler
                 );
 
             var server = new Server(serverScene, serverContainer.GetInstance<List<ISystem<ServerSystemUpdate>>>(), _recievers, _serializers);
+
+            var serverRecievers = serverContainer.GetInstance<List<IMessageReciever>>();
+            serverRecievers.Select(r => serverScene.World.Subscribe(r)).ToList();
 
             var construct = serverScene.World.CreateEntity();
             construct.Set(new NetworkedEntity() { Id = Guid.NewGuid() });
@@ -121,15 +123,15 @@ namespace VoidTraveler
 
                 builder.Register<NetworkedEntities>(c => c.With(Lifetimes.PerContainer));
 
-                builder.Register<ISystem<LogicUpdate>, EntityAdder>(c => c.With(Lifetimes.PerContainer));
-                builder.Register<ISystem<LogicUpdate>, PlayerStateReciever>(c => c.With(Lifetimes.PerContainer));
-                builder.Register<ISystem<LogicUpdate>, TransformMessageApplier>(c => c.With(Lifetimes.PerContainer));
-                builder.Register<ISystem<LogicUpdate>, ProjectileMessageApplier>(c => c.With(Lifetimes.PerContainer));
-                builder.Register<ISystem<LogicUpdate>, CameraMessageApplier>(c => c.With(Lifetimes.PerContainer));
-                builder.Register<ISystem<LogicUpdate>, ConstructMessageApplier>(c => c.With(Lifetimes.PerContainer));
+                builder.Register<IMessageReciever, EntityAdder>(c => c.With(Lifetimes.PerContainer));
+                builder.Register<IMessageReciever, PlayerStateReciever>(c => c.With(Lifetimes.PerContainer));
+                builder.Register<IMessageReciever, TransformMessageApplier>(c => c.With(Lifetimes.PerContainer));
+                builder.Register<IMessageReciever, ProjectileMessageApplier>(c => c.With(Lifetimes.PerContainer));
+                builder.Register<IMessageReciever, CameraMessageApplier>(c => c.With(Lifetimes.PerContainer));
+                builder.Register<IMessageReciever, ConstructMessageApplier>(c => c.With(Lifetimes.PerContainer));
+                builder.Register<IMessageReciever, EntityRemover>(c => c.With(Lifetimes.PerContainer));
+
                 builder.Register<ISystem<LogicUpdate>, TransformLerper>(c => c.With(Lifetimes.PerContainer));
-                builder.Register<ISystem<LogicUpdate>, EntityRemover>(c => c.With(Lifetimes.PerContainer));
-                builder.Register<ISystem<LogicUpdate>, EphemoralEntityRemover>(c => c.With(Lifetimes.PerContainer));
 
                 builder.Register<ISystem<ClientSystemUpdate>, NetworkedPlayerInputSystem>(c => c.With(Lifetimes.PerContainer));
                 builder.Register<ISystem<ClientSystemUpdate>, NetworkedPlayerFiringSystem>(c => c.With(Lifetimes.PerContainer));
@@ -144,6 +146,9 @@ namespace VoidTraveler
 
             var client = new Client(clientScene, clientContainer.GetInstance<List<ISystem<ClientSystemUpdate>>>(), _recievers, _serializers);
 
+            var recievers = clientContainer.GetInstance<List<IMessageReciever>>();
+            var disp = recievers.Select(r => clientScene.World.Subscribe(r)).ToList();
+
             var serverTask = server.Run();
             var clientTask = client.Run();
 
@@ -153,10 +158,10 @@ namespace VoidTraveler
         private static void Message<T>()
         {
             var messageId = _messageId;
-            _recievers[messageId] = (MemoryStream stream, Entity entity) =>
+            _recievers[messageId] = (MemoryStream stream, World world) =>
             {
                 var message = MessagePackSerializer.Deserialize<T>(stream, _serializerOptions);
-                entity.Set(message);
+                world.Publish(in message);
             };
             _serializers[typeof(T)] = (object message, MemoryStream stream) =>
             {

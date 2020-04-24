@@ -48,7 +48,7 @@ namespace VoidTraveler
         private List<Connection> _connections;
         private ulong _messagesSent;
 
-        public Server(Scene scene, List<ISystem<ServerSystemUpdate>> serverSystems, Dictionary<int, Action<MemoryStream, Entity>> recievers, Dictionary<Type, Action<object, MemoryStream>> serializers) :
+        public Server(Scene scene, List<ISystem<ServerSystemUpdate>> serverSystems, Dictionary<int, Action<MemoryStream, World>> recievers, Dictionary<Type, Action<object, MemoryStream>> serializers) :
             base(scene, recievers, serializers)
         {
             _serverSystems = serverSystems;

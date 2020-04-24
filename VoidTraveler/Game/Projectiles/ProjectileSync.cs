@@ -45,11 +45,11 @@ namespace VoidTraveler.Game.Projectiles
         }
     }
 
-    public class ProjectileMessageApplier : EntityMessageApplier<LogicUpdate, ProjectileMessage>
+    public class ProjectileMessageApplier : EntityMessageApplier<ProjectileMessage>
     {
-        public ProjectileMessageApplier(NetworkedEntities entities, World world) : base(entities, world) { }
+        public ProjectileMessageApplier(NetworkedEntities entities) : base(entities) { }
 
-        protected override void Update(LogicUpdate state, in ProjectileMessage messageData, in Entity entity)
+        protected override void On(in ProjectileMessage messageData, in Entity entity)
         {
             var projectile = new Projectile()
             {

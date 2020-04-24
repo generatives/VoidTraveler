@@ -49,11 +49,11 @@ namespace VoidTraveler.Game.Constructs
         }
     }
 
-    public class ConstructPilotingApplier : EntityMessageApplier<LogicUpdate, ConstructPilotingAction>
+    public class ConstructPilotingApplier : EntityMessageApplier<ConstructPilotingAction>
     {
-        public ConstructPilotingApplier(NetworkedEntities entities, World world) : base(entities, world) { }
+        public ConstructPilotingApplier(NetworkedEntities entities) : base(entities) { }
 
-        protected override void Update(LogicUpdate state, in ConstructPilotingAction messageData, in Entity entity)
+        protected override void On(in ConstructPilotingAction messageData, in Entity entity)
         {
             entity.Set(new ConstructPilotable()
             {

@@ -6,26 +6,27 @@ using System.Text;
 
 namespace VoidTraveler.Networking.EntityExistence
 {
-    public class EntityAdder : MessageReciever<LogicUpdate, EntityMessage<EntityAdded>>
+    public class EntityAdder : IMessageReciever
     {
         private World _world;
 
-        public EntityAdder(World world) : base(world)
+        public EntityAdder(World world)
         {
             _world = world;
         }
 
-        protected override void Update(LogicUpdate state, in EntityMessage<EntityAdded> message)
+        [Subscribe]
+        public void On(in EntityMessage<EntityAdded> message)
         {
             var newEntity = _world.CreateEntity();
             newEntity.Set(new NetworkedEntity() { Id = message.Id });
         }
     }
-    public class EntityRemover : EntityMessageApplier<LogicUpdate, EntityRemoved>
+    public class EntityRemover : EntityMessageApplier<EntityRemoved>
     {
-        public EntityRemover(NetworkedEntities entities, World world) : base(entities, world) { }
+        public EntityRemover(NetworkedEntities entities) : base(entities) { }
 
-        protected override void Update(LogicUpdate state, in EntityRemoved messageData, in Entity entity)
+        protected override void On(in EntityRemoved messageData, in Entity entity)
         {
             entity.Dispose();
         }

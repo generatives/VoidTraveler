@@ -92,11 +92,11 @@ namespace VoidTraveler.Game.Core
         }
     }
 
-    public class TransformMessageApplier : EntityMessageApplier<LogicUpdate, TransformMessage>
+    public class TransformMessageApplier : EntityMessageApplier<TransformMessage>
     {
-        public TransformMessageApplier(NetworkedEntities entities, World world) : base(entities, world) { }
+        public TransformMessageApplier(NetworkedEntities entities) : base(entities) { }
 
-        protected override void Update(LogicUpdate state, in TransformMessage message, in Entity entity)
+        protected override void On(in TransformMessage message, in Entity entity)
         {
             //entity.Set(new Transform()
             //{

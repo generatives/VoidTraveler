@@ -12,10 +12,10 @@ namespace VoidTraveler
 {
     public class NetworkedRuntime : Runtime
     {
-        private Dictionary<int, Action<MemoryStream, Entity>> _messageRecievers;
+        private Dictionary<int, Action<MemoryStream, World>> _messageRecievers;
         private Dictionary<Type, Action<object, MemoryStream>> _messageSerializer;
 
-        public NetworkedRuntime(Scene scene, Dictionary<int, Action<MemoryStream, Entity>> recievers, Dictionary<Type, Action<object, MemoryStream>> serializers) : base(scene)
+        public NetworkedRuntime(Scene scene, Dictionary<int, Action<MemoryStream, World>> recievers, Dictionary<Type, Action<object, MemoryStream>> serializers) : base(scene)
         {
             _messageRecievers = recievers;
             _messageSerializer = serializers;
@@ -51,9 +51,7 @@ namespace VoidTraveler
                 for(int i = 0; i < length; i++)
                 {
                     var messageType = stream.ReadByte();
-                    var entity = Scene.World.CreateEntity();
-                    _messageRecievers[messageType](stream, entity);
-                    entity.Set(new EphemoralEntity() { Frames = 1 });
+                    _messageRecievers[messageType](stream, Scene.World);
                 }
             }
         }

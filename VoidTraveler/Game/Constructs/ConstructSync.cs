@@ -47,11 +47,11 @@ namespace VoidTraveler.Game.Constructs
         }
     }
 
-    public class ConstructMessageApplier : EntityMessageApplier<LogicUpdate, ConstructMessage>
+    public class ConstructMessageApplier : EntityMessageApplier<ConstructMessage>
     {
-        public ConstructMessageApplier(NetworkedEntities entities, World world) : base(entities, world) { }
+        public ConstructMessageApplier(NetworkedEntities entities) : base(entities) { }
 
-        protected override void Update(LogicUpdate state, in ConstructMessage messageData, in Entity entity)
+        protected override void On(in ConstructMessage messageData, in Entity entity)
         {
             var construct = entity.Has<Construct>() ?
                 entity.Get<Construct>() :

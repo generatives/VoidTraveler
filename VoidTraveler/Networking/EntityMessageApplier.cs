@@ -5,21 +5,22 @@ using System.Text;
 
 namespace VoidTraveler.Networking
 {
-    public class EntityMessageApplier<TState, TData> : MessageReciever<TState, EntityMessage<TData>>
+    public class EntityMessageApplier<TData> : IMessageReciever
     {
         protected NetworkedEntities Entities { get; private set; }
 
-        public EntityMessageApplier(NetworkedEntities entities, World world) : base(world)
+        public EntityMessageApplier(NetworkedEntities entities)
         {
             Entities = entities;
         }
 
-        protected override void Update(TState state, in EntityMessage<TData> message)
+        [Subscribe]
+        public void On(in EntityMessage<TData> message)
         {
             var entity = Entities[message.Id];
-            Update(state, message.Data, entity);
+            On(message.Data, entity);
         }
 
-        protected virtual void Update(TState state, in TData messageData, in Entity entity) { }
+        protected virtual void On(in TData messageData, in Entity entity) { }
     }
 }
