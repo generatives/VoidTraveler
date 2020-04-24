@@ -34,7 +34,7 @@ namespace VoidTraveler.Game.Constructs
                 body.DestroyFixture(fixture);
             }
 
-            var offset = new Vector2(-source.XLength * source.TileSize / 2f, -source.YLength * source.TileSize / 2f);
+            var offset = new Vector2(-source.HalfWidth, -source.HalfHeight) + (Vector2.One * source.TileSize / 2f);
 
             foreach (var (x, y, tile) in source.GetTiles())
             {

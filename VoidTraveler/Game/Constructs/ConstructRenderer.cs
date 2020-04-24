@@ -23,7 +23,7 @@ namespace VoidTraveler.Game.Constructs
 
             var transformMatrix = transform.GetPositionScaledWorldMatrix(Settings.GRAPHICS_SCALE);
 
-            var offset = new Vector2(-construct.XLength, -construct.YLength) * construct.TileSize / 2f;
+            var offset = new Vector2(-construct.HalfWidth, -construct.HalfHeight);
             var size = Vector2.One * construct.TileSize;
 
             foreach (var (x, y, tile) in construct.GetTiles())
@@ -33,14 +33,14 @@ namespace VoidTraveler.Game.Constructs
                     var position = offset + new Vector2(x, y) * construct.TileSize;
                     device.Add(device.WhitePixel,
                         size * Settings.GRAPHICS_SCALE,
-                        Matrix3x2.CreateTranslation((position - size / 2f) * Settings.GRAPHICS_SCALE) * transformMatrix,
+                        Matrix3x2.CreateTranslation((position) * Settings.GRAPHICS_SCALE) * transformMatrix,
                         tile.Colour);
 
                     if (tile.Collides)
                     {
                         device.Add(device.WhitePixel,
                             Vector2.One * (construct.TileSize - 0.2f) * Settings.GRAPHICS_SCALE,
-                            Matrix3x2.CreateTranslation((new Vector2(position.X + 0.1f, position.Y + 0.1f) - size / 2f) * Settings.GRAPHICS_SCALE) * transformMatrix,
+                            Matrix3x2.CreateTranslation((new Vector2(position.X + 0.1f, position.Y + 0.1f)) * Settings.GRAPHICS_SCALE) * transformMatrix,
                             RgbaFloat.Black);
                     }
                 }

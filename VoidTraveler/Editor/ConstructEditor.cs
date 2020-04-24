@@ -79,8 +79,8 @@ namespace VoidTraveler.Editor
                     var construct = entity.Get<Construct>();
 
                     var local = transform.GetLocal(mousePosition);
-                    var xIndex = (int)Math.Floor((local.X + construct.HalfWidth + construct.TileSize / 2f) / construct.TileSize);
-                    var yIndex = (int)Math.Floor((local.Y + construct.HalfHeight + construct.TileSize / 2f) / construct.TileSize);
+                    var xIndex = (int)Math.Floor((local.X + construct.HalfWidth) / construct.TileSize);
+                    var yIndex = (int)Math.Floor((local.Y + construct.HalfHeight) / construct.TileSize);
 
                     if(construct.Contains(xIndex, yIndex))
                     {
