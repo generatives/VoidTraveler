@@ -10,6 +10,6 @@ namespace VoidTraveler.Editor
         string Category { get; }
         bool Active { get; set; }
 
-        void Run(EditorRun runParam);
+        void Run(EditorUpdate runParam);
     }
 }

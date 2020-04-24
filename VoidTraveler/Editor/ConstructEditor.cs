@@ -1,5 +1,6 @@
 ﻿using DefaultEcs;
 using ImGuiNET;
+using MessagePack;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,10 +8,23 @@ using System.Text;
 using Veldrid;
 using VoidTraveler.Game.Constructs;
 using VoidTraveler.Game.Constructs.Components;
+using VoidTraveler.Game.Core;
 using VoidTraveler.Game.Physics;
+using VoidTraveler.Networking;
 
 namespace VoidTraveler.Editor
 {
+    [MessagePackObject]
+    public struct ConstructEditorAction
+    {
+        [Key(0)]
+        public ConstructTile Tile;
+        [Key(1)]
+        public int X;
+        [Key(2)]
+        public int Y;
+    }
+
     public class ConstructEditor : IEditor
     {
         public string Name => "Construct Editor";
@@ -28,7 +42,14 @@ namespace VoidTraveler.Editor
         };
         private int _selectedTile;
 
-        public void Run(EditorRun runParam)
+        private EntitySet _constructEntities;
+
+        public ConstructEditor(World world)
+        {
+            _constructEntities = world.GetEntities().With<NetworkedEntity>().With<Transform>().With<Construct>().AsSet();
+        }
+
+        public void Run(EditorUpdate runParam)
         {
             var open = Active;
             ImGui.Begin(Name, ref open);
@@ -51,22 +72,38 @@ namespace VoidTraveler.Editor
 
             if(runParam.CameraSpaceGameInput.GetMouseButtonPressed(Tortuga.Platform.TMouseButton.Left))
             {
-                var physicsSystem = runParam.Scene.LogicSystems.FirstOrDefault(s => s is PhysicsSystem) as PhysicsSystem;
-                if (physicsSystem != null)
+                var mousePosition = runParam.CameraSpaceGameInput.MousePosition;
+                foreach (var entity in _constructEntities.GetEntities())
                 {
-                    var world = physicsSystem.World;
+                    var transform = entity.Get<Transform>();
+                    var construct = entity.Get<Construct>();
 
-                    var fixture = world.TestPoint(runParam.CameraSpaceInput.MousePosition);
-                    if (fixture != null &&
-                        fixture.UserData is ConstructTileUserInfo userInfo &&
-                        fixture.Body.UserData is Entity bodyEntity && bodyEntity.Has<Construct>())
+                    var local = transform.GetLocal(mousePosition) / Settings.GRAPHICS_SCALE;
+                    var xIndex = (int)Math.Floor((local.X + construct.HalfWidth + construct.TileSize / 2f) / construct.TileSize);
+                    var yIndex = (int)Math.Floor((local.Y + construct.HalfHeight + construct.TileSize / 2f) / construct.TileSize);
+
+                    if(construct.Contains(xIndex, yIndex))
                     {
-                        var construct = bodyEntity.Get<Construct>();
-                        construct[userInfo.X, userInfo.Y] = _tiles[_selectedTile].Item2;
-                        bodyEntity.Set(construct);
+                        var netEntity = entity.Get<NetworkedEntity>();
+                        var action = new ConstructEditorAction() { Tile = _tiles[_selectedTile].Item2, X = xIndex, Y = yIndex };
+                        runParam.ServerMessages.Add(new EntityMessage<ConstructEditorAction>(netEntity.Id, action));
                     }
                 }
             }
+        }
+    }
+
+    public class ConstructEditorActionReceiver : EntityMessageApplier<ConstructEditorAction>
+    {
+        public ConstructEditorActionReceiver(NetworkedEntities entities) : base(entities)
+        {
+        }
+
+        protected override void On(in ConstructEditorAction messageData, in Entity entity)
+        {
+            var construct = entity.Get<Construct>();
+            construct[messageData.X, messageData.Y] = messageData.Tile;
+            entity.Set(construct);
         }
     }
 }

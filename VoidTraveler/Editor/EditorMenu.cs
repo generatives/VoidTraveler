@@ -8,11 +8,12 @@ using VoidTraveler.Scenes;
 
 namespace VoidTraveler.Editor
 {
-    public struct EditorRun
+    public struct EditorUpdate
     {
         public Scene Scene;
         public IInputTracker CameraSpaceInput;
         public IInputTracker CameraSpaceGameInput;
+        public List<object> ServerMessages;
     }
 
     public class EditorMenu
@@ -24,7 +25,7 @@ namespace VoidTraveler.Editor
             Editors = new List<IEditor>();
         }
 
-        public void Run(EditorRun runParam)
+        public void Run(EditorUpdate runParam)
         {
             var groupedEditors = Editors.GroupBy(e => e.Category);
 

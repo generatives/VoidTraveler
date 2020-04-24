@@ -54,6 +54,7 @@ namespace VoidTraveler
             Message<EntityMessage<CameraMessage>>();
             Message<EntityMessage<ConstructMessage>>();
             Message<EntityMessage<ConstructPilotingAction>>();
+            Message<EntityMessage<ConstructEditorAction>>();
 
             var serverContainer = new Container(builder =>
             {
@@ -63,6 +64,7 @@ namespace VoidTraveler
                 builder.Register<IMessageReciever, ConstructPilotingApplier>(c => c.With(Lifetimes.PerContainer));
                 builder.Register<IMessageReciever, NetworkedPlayerInputReciever>(c => c.With(Lifetimes.PerContainer));
                 builder.Register<IMessageReciever, NetworkedPlayerFiringReciever>(c => c.With(Lifetimes.PerContainer));
+                builder.Register<IMessageReciever, ConstructEditorActionReceiver>(c => c.With(Lifetimes.PerContainer));
 
                 builder.Register<ISystem<LogicUpdate>, ConstructBodyGenerator>(c => c.With(Lifetimes.PerContainer));
                 builder.Register<ISystem<LogicUpdate>, PhysicsSystem>(c => c.With(Lifetimes.PerContainer));
@@ -81,6 +83,7 @@ namespace VoidTraveler
                 builder.Register<ISystem<ServerSystemUpdate>, ProjectileServerSystem>(c => c.With(Lifetimes.PerContainer));
                 builder.Register<ISystem<ServerSystemUpdate>, CameraServerSystem>(c => c.With(Lifetimes.PerContainer));
                 builder.Register<ISystem<ServerSystemUpdate>, ConstructServerSystem>(c => c.With(Lifetimes.PerContainer));
+                builder.Register<ISystem<ServerSystemUpdate>, ConstructServerInitSystem>(c => c.With(Lifetimes.PerContainer));
             });
 
             var serverScene = new Scene(

@@ -66,7 +66,7 @@ namespace VoidTraveler
             _camerasSet = scene.World.GetEntities().With<Transform>().With<Camera>().AsSet();
 
             _editorMenu = new EditorMenu();
-            _editorMenu.Editors.Add(new ConstructEditor());
+            _editorMenu.Editors.Add(new ConstructEditor(scene.World));
             _editorMenu.Editors.Add(new InfoViewer());
 
             _client = new RuffleSocket(_clientConfig);
@@ -173,9 +173,13 @@ namespace VoidTraveler
             Scene.Update(new LogicUpdate((float)deltaSeconds, _cameraSpaceGameInputTracker));
             PostUpdate(deltaSeconds);
 
+            var serverMessages = new List<object>();
+
+            _editorMenu.Run(new EditorUpdate() { CameraSpaceInput = _cameraSpaceInputTracker, CameraSpaceGameInput = _cameraSpaceGameInputTracker, Scene = Scene, ServerMessages = serverMessages });
+
             var clientUpdate = new ClientSystemUpdate()
             {
-                Messages = new List<object>(),
+                Messages = serverMessages,
                 Input = _cameraSpaceGameInputTracker
             };
 
@@ -186,7 +190,7 @@ namespace VoidTraveler
 
             if(_server != null)
             {
-                var messages = SerializeMessages(clientUpdate.Messages);
+                var messages = SerializeMessages(serverMessages);
                 _server.Send(messages, 4, false, _messagesSent++);
             }
 
@@ -209,8 +213,6 @@ namespace VoidTraveler
                     SpriteBatchExtensions.DrawCircle(_drawDevice, (gridCenter + new Vector2(x, y) * gridSize) * Settings.GRAPHICS_SCALE, 0.2f * Settings.GRAPHICS_SCALE, 8, RgbaFloat.Red);
                 }
             }
-
-            _editorMenu.Run(new EditorRun() { CameraSpaceInput = _cameraSpaceInputTracker, CameraSpaceGameInput = _cameraSpaceGameInputTracker, Scene = Scene });
 
             _drawDevice.Draw();
 

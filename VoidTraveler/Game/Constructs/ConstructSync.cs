@@ -21,14 +21,39 @@ namespace VoidTraveler.Game.Constructs
         public ConstructTile[] Tiles;
     }
 
-    [With(typeof(Construct), typeof(NetworkedEntity))]
+    [With(typeof(NetworkedEntity))]
+    [WhenChangedEither(typeof(Construct))]
+    [WhenAddedEither(typeof(Construct))]
     public class ConstructServerSystem : AEntitySystem<ServerSystemUpdate>
     {
         public ConstructServerSystem(World world) : base(world) { }
 
         protected override void Update(ServerSystemUpdate state, in Entity entity)
         {
-            if(state.NewClients)
+            var construct = entity.Get<Construct>();
+            ref var netEntity = ref entity.Get<NetworkedEntity>();
+
+            var tilesCopy = new ConstructTile[construct.Tiles.Length];
+            construct.Tiles.CopyTo(tilesCopy, 0);
+
+            state.Messages.Add(new EntityMessage<ConstructMessage>(netEntity.Id, new ConstructMessage()
+            {
+                XLength = construct.XLength,
+                YLength = construct.YLength,
+                TileSize = construct.TileSize,
+                Tiles = tilesCopy,
+            }));
+        }
+    }
+
+    [With(typeof(NetworkedEntity), typeof(Construct))]
+    public class ConstructServerInitSystem : AEntitySystem<ServerSystemUpdate>
+    {
+        public ConstructServerInitSystem(World world) : base(world) { }
+
+        protected override void Update(ServerSystemUpdate state, in Entity entity)
+        {
+            if (state.NewClients)
             {
                 var construct = entity.Get<Construct>();
                 ref var netEntity = ref entity.Get<NetworkedEntity>();

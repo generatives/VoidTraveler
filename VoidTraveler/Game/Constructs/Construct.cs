@@ -12,6 +12,10 @@ namespace VoidTraveler.Game.Constructs
         public int XLength { get; private set; }
         public int YLength { get; private set; }
         public float TileSize { get; set; }
+        public float Width => XLength * TileSize;
+        public float Height => YLength * TileSize;
+        public float HalfWidth => Width / 2f;
+        public float HalfHeight => Height / 2f;
         public ConstructTile[] Tiles { get; private set; }
 
         public ConstructTile this[int x, int y]
@@ -26,6 +30,12 @@ namespace VoidTraveler.Game.Constructs
             YLength = yLength;
             TileSize = tileSize;
             Tiles = new ConstructTile[XLength * YLength];
+        }
+
+        public bool Contains(int x, int y)
+        {
+            return x >= 0 && x < XLength &&
+                y >= 0 && y < YLength;
         }
 
         public IEnumerable<(int, int, ConstructTile)> GetTiles()

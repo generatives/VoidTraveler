@@ -22,7 +22,7 @@ namespace VoidTraveler.Editor
             Values = new ConcurrentDictionary<string, string>();
         }
 
-        public void Run(EditorRun runParam)
+        public void Run(EditorUpdate runParam)
         {
             var open = Active;
             ImGui.Begin(Name, ref open);
