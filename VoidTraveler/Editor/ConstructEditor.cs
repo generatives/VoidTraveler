@@ -72,13 +72,13 @@ namespace VoidTraveler.Editor
 
             if(runParam.CameraSpaceGameInput.GetMouseButtonPressed(Tortuga.Platform.TMouseButton.Left))
             {
-                var mousePosition = runParam.CameraSpaceGameInput.MousePosition;
+                var mousePosition = runParam.CameraSpaceGameInput.MousePosition / Settings.GRAPHICS_SCALE;
                 foreach (var entity in _constructEntities.GetEntities())
                 {
                     var transform = entity.Get<Transform>();
                     var construct = entity.Get<Construct>();
 
-                    var local = transform.GetLocal(mousePosition) / Settings.GRAPHICS_SCALE;
+                    var local = transform.GetLocal(mousePosition);
                     var xIndex = (int)Math.Floor((local.X + construct.HalfWidth + construct.TileSize / 2f) / construct.TileSize);
                     var yIndex = (int)Math.Floor((local.Y + construct.HalfHeight + construct.TileSize / 2f) / construct.TileSize);
 

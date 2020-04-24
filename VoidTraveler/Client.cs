@@ -175,7 +175,13 @@ namespace VoidTraveler
 
             var serverMessages = new List<object>();
 
-            _editorMenu.Run(new EditorUpdate() { CameraSpaceInput = _cameraSpaceInputTracker, CameraSpaceGameInput = _cameraSpaceGameInputTracker, Scene = Scene, ServerMessages = serverMessages });
+            _editorMenu.Run(new EditorUpdate()
+            {
+                CameraSpaceInput = _cameraSpaceInputTracker,
+                CameraSpaceGameInput = _cameraSpaceGameInputTracker,
+                Scene = Scene,
+                ServerMessages = serverMessages
+            });
 
             var clientUpdate = new ClientSystemUpdate()
             {
