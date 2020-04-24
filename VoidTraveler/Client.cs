@@ -73,7 +73,7 @@ namespace VoidTraveler
             _messageTimer = new Stopwatch();
         }
 
-        public Task Run()
+        public void Run()
         {
             var platform = new DesktopPlatform();
 
@@ -110,7 +110,7 @@ namespace VoidTraveler
             _client.Start();
             _client.Connect(new IPEndPoint(IPAddress.Loopback, 5674));
 
-            return _window.Run();
+            _window.Run();
         }
 
         private void _window_Resized()

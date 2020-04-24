@@ -150,9 +150,7 @@ namespace VoidTraveler
             var disp = recievers.Select(r => clientScene.World.Subscribe(r)).ToList();
 
             var serverTask = server.Run();
-            var clientTask = client.Run();
-
-            Task.WaitAll(serverTask, clientTask);
+            client.Run();
         }
 
         private static void Message<T>()

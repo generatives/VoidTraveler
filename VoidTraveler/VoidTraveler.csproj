@@ -12,8 +12,8 @@
     <PackageReference Include="MessagePack" Version="2.1.115" />
     <PackageReference Include="Ruffles" Version="10.0.0" />
     <PackageReference Include="Singularity" Version="0.17.5" />
-    <PackageReference Include="Tortuga" Version="1.0.4" />
-    <PackageReference Include="Tortuga.DesktopPlatform" Version="1.0.5" />
+    <PackageReference Include="Tortuga" Version="1.0.6" />
+    <PackageReference Include="Tortuga.DesktopPlatform" Version="1.0.6" />
     <PackageReference Include="Veldrid.ImGui" Version="5.72.0" />
   </ItemGroup>
 

@@ -27,7 +27,8 @@ namespace VoidTraveler.Editor
             var open = Active;
             ImGui.Begin(Name, ref open);
             Active = open;
-            foreach(var kvp in Values.OrderBy(kvp => kvp.Key))
+            var values = Values.ToList();
+            foreach(var kvp in values.OrderBy(kvp => kvp.Key))
             {
                 ImGui.Text($"{kvp.Key}: {kvp.Value}");
             }
