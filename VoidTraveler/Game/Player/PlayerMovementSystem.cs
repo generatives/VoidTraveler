@@ -33,7 +33,7 @@ namespace VoidTraveler.Game.Player
 
             transform.Rotation += player.RotationAmount;
 
-            if(player.Fire)
+            if (player.Fire)
             {
                 var projectile = _world.CreateEntity();
                 projectile.Set(new NetworkedEntity() { Id = Guid.NewGuid() });

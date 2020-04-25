@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using VoidTraveler.Editor;
 using VoidTraveler.Game.Core.Ephemoral;
 using VoidTraveler.Scenes;
 
@@ -48,7 +49,8 @@ namespace VoidTraveler
                 if(BitConverter.IsLittleEndian)
                     Array.Reverse(lengthBytes);
                 var length = BitConverter.ToInt32(lengthBytes, 0);
-                for(int i = 0; i < length; i++)
+
+                for (int i = 0; i < length; i++)
                 {
                     var messageType = stream.ReadByte();
                     _messageRecievers[messageType](stream, Scene.World);

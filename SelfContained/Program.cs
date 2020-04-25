@@ -181,7 +181,7 @@ namespace VoidTraveler
                 for (int y = 0; y < height; y++)
                 {
                     var edge = x == 0 || x == width - 1 || y == 0 || y == height - 1;
-                    construct[x, y] = new ConstructTile() { Exists = true, Collides = true, Colour = edge ? RgbaFloat.Grey : RgbaFloat.White };
+                    construct[x, y] = new ConstructTile() { Exists = true, Collides = edge, Colour = edge ? RgbaFloat.Grey : RgbaFloat.White };
                 }
             }
 

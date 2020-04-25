@@ -38,6 +38,7 @@ namespace VoidTraveler
         private List<ISystem<ClientSystemUpdate>> _clientSystems;
 
         private EntitySet _camerasSet;
+        private float _zoom = 0.8f;
 
         private EditorMenu _editorMenu;
 
@@ -163,10 +164,13 @@ namespace VoidTraveler
 
             var inputTrackerTransform = Matrix3x2.CreateTranslation(-_window.Width / 2f, -_window.Height / 2f) *
                 Matrix3x2.CreateScale(1 / Settings.GRAPHICS_SCALE, -1 / Settings.GRAPHICS_SCALE) *
+                Matrix3x2.CreateScale(1 / _zoom) *
                 cameraTransform.Matrix;
 
             _cameraSpaceInputTracker.SetTransform(inputTrackerTransform);
             _cameraSpaceGameInputTracker.SetActive(!imGuiWantsMouse);
+
+            _zoom += _window.InputSnapshot.WheelDelta * 0.1f;
 
             PreUpdate(deltaSeconds);
             Scene.Update(new LogicUpdate((float)deltaSeconds, _cameraSpaceGameInputTracker));
@@ -202,7 +206,7 @@ namespace VoidTraveler
             cameraEntities = _camerasSet.GetEntities();
             cameraTransform = cameraEntities.Length > 0 ? cameraEntities[0].Get<Transform>() : new Transform();
 
-            var cameraMatrix = cameraTransform.GetCameraMatrix(Settings.GRAPHICS_SCALE);
+            var cameraMatrix = cameraTransform.GetCameraMatrix(Settings.GRAPHICS_SCALE) * Matrix4x4.CreateScale(_zoom);
 
             var vp = _viewport.Viewport;
             _drawDevice.Begin(cameraMatrix * _viewport.GetScalingTransform(), vp);

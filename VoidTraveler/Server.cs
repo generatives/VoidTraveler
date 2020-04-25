@@ -48,6 +48,8 @@ namespace VoidTraveler
         private List<Connection> _connections;
         private ulong _messagesSent;
 
+        private float _timeSinceUpdate = 0f;
+
         public Server(Scene scene, List<ISystem<ServerSystemUpdate>> serverSystems, Dictionary<int, Action<MemoryStream, World>> recievers, Dictionary<Type, Action<object, MemoryStream>> serializers) :
             base(scene, recievers, serializers)
         {
@@ -95,42 +97,51 @@ namespace VoidTraveler
 
         protected override void PostUpdate(double deltaTime)
         {
-            var serverUpdate = new ServerSystemUpdate()
+            _timeSinceUpdate += (float)deltaTime;
+            if(_timeSinceUpdate > 0.05f)
             {
-                DeltaTime = deltaTime,
-                Messages = new List<object>(),
-                NewClients = _newConnections.Any(),
-                NewClientMessages = new List<object>()
-            };
-
-            foreach (var system in _serverSystems)
-            {
-                system.Update(serverUpdate);
-            }
-
-            if(_newConnections.Any())
-            {
-                var newConnectionMessage = SerializeMessages(serverUpdate.NewClientMessages);
-
-                foreach (var conn in _newConnections)
+                var serverUpdate = new ServerSystemUpdate()
                 {
-                    conn.Send(newConnectionMessage, 4, false, _messagesSent++);
+                    DeltaTime = _timeSinceUpdate,
+                    Messages = new List<object>(),
+                    NewClients = _newConnections.Any(),
+                    NewClientMessages = new List<object>()
+                };
+
+                foreach (var system in _serverSystems)
+                {
+                    system.Update(serverUpdate);
                 }
+
+                if (_newConnections.Any())
+                {
+                    var newConnectionMessage = SerializeMessages(serverUpdate.NewClientMessages);
+
+                    foreach (var conn in _newConnections)
+                    {
+                        conn.Send(newConnectionMessage, 4, false, _messagesSent++);
+                    }
+                }
+
+                if(serverUpdate.Messages.Any())
+                {
+                    var message = SerializeMessages(serverUpdate.Messages);
+
+                    foreach (var conn in _connections)
+                    {
+                        conn.Send(message, 4, false, _messagesSent++);
+                    }
+                }
+
+                _connections.AddRange(_newConnections);
+                _newConnections.Clear();
+
+                _timeSinceUpdate = 0;
             }
 
-            var message = SerializeMessages(serverUpdate.Messages);
-
-            foreach (var conn in _connections)
+            while (Stopwatch.Elapsed.TotalSeconds < 0.01)
             {
-                conn.Send(message, 4, false, _messagesSent++);
-            }
-
-            _connections.AddRange(_newConnections);
-            _newConnections.Clear();
-
-            while (Stopwatch.Elapsed.TotalSeconds < 0.05)
-            {
-                Thread.Sleep(5);
+                Thread.Sleep(1);
             }
         }
     }
