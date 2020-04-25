@@ -162,9 +162,8 @@ namespace VoidTraveler
             var cameraTransform = cameraEntities.Length > 0 ? cameraEntities[0].Get<Transform>() : new Transform();
 
             var inputTrackerTransform = Matrix3x2.CreateTranslation(-_window.Width / 2f, -_window.Height / 2f) *
-                Matrix3x2.CreateScale(1, -1) *
-                cameraTransform.Matrix *
-                Matrix3x2.CreateScale(1 / 0.8f);
+                Matrix3x2.CreateScale(1 / Settings.GRAPHICS_SCALE, -1 / Settings.GRAPHICS_SCALE) *
+                cameraTransform.Matrix;
 
             _cameraSpaceInputTracker.SetTransform(inputTrackerTransform);
             _cameraSpaceGameInputTracker.SetActive(!imGuiWantsMouse);
@@ -203,7 +202,7 @@ namespace VoidTraveler
             cameraEntities = _camerasSet.GetEntities();
             cameraTransform = cameraEntities.Length > 0 ? cameraEntities[0].Get<Transform>() : new Transform();
 
-            var cameraMatrix = cameraTransform.GetCameraMatrix(Settings.GRAPHICS_SCALE) * Matrix4x4.CreateScale(0.8f);
+            var cameraMatrix = cameraTransform.GetCameraMatrix(Settings.GRAPHICS_SCALE);
 
             var vp = _viewport.Viewport;
             _drawDevice.Begin(cameraMatrix * _viewport.GetScalingTransform(), vp);

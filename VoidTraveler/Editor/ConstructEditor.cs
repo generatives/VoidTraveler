@@ -72,7 +72,7 @@ namespace VoidTraveler.Editor
 
             if(runParam.CameraSpaceGameInput.GetMouseButtonPressed(Tortuga.Platform.TMouseButton.Left))
             {
-                var mousePosition = runParam.CameraSpaceGameInput.MousePosition / Settings.GRAPHICS_SCALE;
+                var mousePosition = runParam.CameraSpaceGameInput.MousePosition;
                 foreach (var entity in _constructEntities.GetEntities())
                 {
                     var transform = entity.Get<Transform>();
@@ -87,6 +87,7 @@ namespace VoidTraveler.Editor
                         var netEntity = entity.Get<NetworkedEntity>();
                         var action = new ConstructEditorAction() { Tile = _tiles[_selectedTile].Item2, X = xIndex, Y = yIndex };
                         runParam.ServerMessages.Add(new EntityMessage<ConstructEditorAction>(netEntity.Id, action));
+                        break;
                     }
                 }
             }
