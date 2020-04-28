@@ -13,5 +13,6 @@ namespace VoidTraveler.Game.Projectiles
         public RgbaFloat Colour { get; set; }
         public Vector2 MoveDirection { get; set; }
         public float MoveSpeed { get; set; }
+        public Entity CurrentConstruct { get; set; }
     }
 }

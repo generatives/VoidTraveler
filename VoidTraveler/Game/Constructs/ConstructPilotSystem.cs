@@ -62,8 +62,8 @@ namespace VoidTraveler.Game.Constructs
                 body.Body.Awake = true;
             }
 
-            InfoViewer.Values[$"V Force {entity.ToString()}"] = $"X: {force.X}, Y: {force.Y}";
-            InfoViewer.Values[$"Vel {entity.ToString()}"] = $"X: {body.Body.LinearVelocity.X}, Y: {body.Body.LinearVelocity.Y}";
+            InfoViewer.Log($"V Force {entity.ToString()}", $"X: {force.X}, Y: {force.Y}");
+            InfoViewer.Log($"Vel {entity.ToString()}", $"X: {body.Body.LinearVelocity.X}, Y: {body.Body.LinearVelocity.Y}");
         }
     }
 }

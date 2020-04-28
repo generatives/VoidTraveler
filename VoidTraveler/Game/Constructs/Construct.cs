@@ -32,10 +32,22 @@ namespace VoidTraveler.Game.Constructs
             Tiles = new ConstructTile[XLength * YLength];
         }
 
+        public (int, int) GetIndex(Vector2 localPosition)
+        {
+            var xIndex = (int)Math.Floor((localPosition.X + HalfWidth) / TileSize);
+            var yIndex = (int)Math.Floor((localPosition.Y + HalfHeight) / TileSize);
+            return (xIndex, yIndex);
+        }
+
         public bool Contains(int x, int y)
         {
             return x >= 0 && x < XLength &&
                 y >= 0 && y < YLength;
+        }
+
+        public bool ContainsCollider(int x, int y)
+        {
+            return Contains(x, y) && this[x, y].Exists && this[x, y].Collides;
         }
 
         public IEnumerable<(int, int, ConstructTile)> GetTiles()

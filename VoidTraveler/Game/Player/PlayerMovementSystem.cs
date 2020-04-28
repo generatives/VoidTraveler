@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Numerics;
 using System.Text;
 using Veldrid;
+using VoidTraveler.Game.Constructs;
 using VoidTraveler.Game.Core;
 using VoidTraveler.Game.Physics;
 using VoidTraveler.Game.Projectiles;
@@ -17,12 +18,10 @@ namespace VoidTraveler.Game.Player
     [With(typeof(Transform), typeof(Player))]
     public class PlayerMovementSystem : AEntitySystem<LogicUpdate>
     {
-        private readonly FarseerPhysics.Dynamics.World _physicsWorld;
         private readonly World _world;
 
-        public PlayerMovementSystem(FarseerPhysics.Dynamics.World physicsWorld, World world) : base(world)
+        public PlayerMovementSystem(World world) : base(world)
         {
-            _physicsWorld = physicsWorld;
             _world = world;
         }
 
@@ -43,27 +42,18 @@ namespace VoidTraveler.Game.Player
                     Colour = RgbaFloat.Red,
                     Radius = 0.25f,
                     MoveDirection = transform.ParentTransform.GetLocal(player.FireAt) - transform.ParentTransform.GetLocal(transform.WorldPosition),
-                    MoveSpeed = 10f
+                    MoveSpeed = 10f,
+                    CurrentConstruct = player.CurrentConstruct
                 });
                 player.Fire = false;
             }
 
             if(player.MoveDirection != Vector2.Zero)
             {
+                ref var construct = ref player.CurrentConstruct.Get<Construct>();
+
                 var goalPosition = transform.Position + Vector2.Normalize(player.MoveDirection) * player.MoveSpeed * (float)update.DeltaSeconds;
-                var goalWorldPosition = transform.ParentTransform.GetWorld(goalPosition);
-                var playerAABB = new AABB(goalWorldPosition, player.Radius * 2, player.Radius * 2);
-
-                var collided = false;
-                _physicsWorld.QueryAABB(
-                    (fixture) =>
-                    {
-                        collided = true;
-                        return !collided;
-                    },
-                    ref playerAABB);
-
-                if (!collided)
+                if(!ConstructEntityMovement.Collides(ref construct, goalPosition, player.Radius * 2f))
                 {
                     transform.Position = goalPosition;
                     entity.Set(transform);

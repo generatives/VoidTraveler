@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using System.Text;
+using VoidTraveler.Game.Constructs;
 using VoidTraveler.Game.Core;
 using VoidTraveler.Game.Physics;
 
@@ -13,11 +14,8 @@ namespace VoidTraveler.Game.Projectiles
 {
     public class ProjectileMovementSystem : AEntityBufferedSystem<LogicUpdate>
     {
-        private readonly FarseerPhysics.Dynamics.World _physicsWorld;
-
-        public ProjectileMovementSystem(FarseerPhysics.Dynamics.World physicsWorld, World world) : base(world.GetEntities().With<Transform>().With<Projectile>().AsSet())
+        public ProjectileMovementSystem(World world) : base(world.GetEntities().With<Transform>().With<Projectile>().AsSet())
         {
-            _physicsWorld = physicsWorld;
         }
 
         protected override void Update(LogicUpdate update, in Entity entity)
@@ -27,20 +25,10 @@ namespace VoidTraveler.Game.Projectiles
 
             if(projectile.MoveDirection != Vector2.Zero)
             {
+                ref var construct = ref projectile.CurrentConstruct.Get<Construct>();
+
                 var goalPosition = transform.Position + Vector2.Normalize(projectile.MoveDirection) * projectile.MoveSpeed * (float)update.DeltaSeconds;
-                var goalWorldPosition = transform.ParentTransform.GetWorld(goalPosition);
-                var playerAABB = new AABB(goalWorldPosition, projectile.Radius * 2, projectile.Radius * 2);
-
-                var collided = false;
-                _physicsWorld.QueryAABB(
-                    (fixture) =>
-                    {
-                        collided = true;
-                        return !collided;
-                    },
-                    ref playerAABB);
-
-                if (!collided)
+                if (!ConstructEntityMovement.Collides(ref construct, goalPosition, projectile.Radius * 2f))
                 {
                     transform.Position = goalPosition;
                     entity.Set(transform);

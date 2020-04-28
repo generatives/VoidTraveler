@@ -31,7 +31,8 @@ namespace VoidTraveler
                 ChannelType.ReliableSequenced,
                 ChannelType.Unreliable,
                 ChannelType.UnreliableOrdered,
-                ChannelType.ReliableSequencedFragmented
+                ChannelType.ReliableSequencedFragmented,
+                ChannelType.ReliableFragmented
             },
             DualListenPort = 5674,
             SimulatorConfig = new Ruffles.Simulation.SimulatorConfig()
@@ -139,7 +140,7 @@ namespace VoidTraveler
                 _timeSinceUpdate = 0;
             }
 
-            while (Stopwatch.Elapsed.TotalSeconds < 0.01)
+            while (Stopwatch.Elapsed.TotalSeconds < 0.016)
             {
                 Thread.Sleep(1);
             }

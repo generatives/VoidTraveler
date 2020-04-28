@@ -13,8 +13,6 @@ namespace VoidTraveler.Game.Core
     [With(typeof(TransformLerp))]
     public class TransformLerper : AEntitySystem<LogicUpdate>
     {
-        private readonly float SERVER_FRAME_TIME = 0.05f;
-
         private NetworkedEntities _entities;
 
         public TransformLerper(NetworkedEntities networkedEntities, World world) : base(world)
@@ -56,7 +54,7 @@ namespace VoidTraveler.Game.Core
                 lerp.Progress += frameTime;
             }
 
-            InfoViewer.Values[$"Stack {entity.ToString()}"] = lerp.Messages.Count.ToString();
+            InfoViewer.Log($"Stack {entity.ToString()}", lerp.Messages.Count.ToString());
 
             entity.Set(lerp);
         }

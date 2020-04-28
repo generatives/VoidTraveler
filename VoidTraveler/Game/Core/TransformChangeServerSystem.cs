@@ -98,14 +98,6 @@ namespace VoidTraveler.Game.Core
 
         protected override void On(in TransformMessage message, in Entity entity)
         {
-            //entity.Set(new Transform()
-            //{
-            //    Position = message.Position,
-            //    Rotation = message.Rotation,
-            //    Scale = message.Scale,
-            //    Parent = message.ParentId.HasValue ? Entities[new NetworkedEntity() { Id = message.ParentId.Value }] : (Entity?)null
-            //});
-
             if (!entity.Has<Transform>())
             {
                 entity.Set(new Transform()

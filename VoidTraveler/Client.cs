@@ -130,10 +130,10 @@ namespace VoidTraveler
         public override void Update()
         {
             var deltaSeconds = Stopwatch.Elapsed.TotalSeconds;
-            InfoViewer.Values["Client FPS"] = Math.Round(1f / deltaSeconds, 2).ToString();
+            InfoViewer.Log("Client FPS", Math.Round(1f / deltaSeconds, 2).ToString());
 
-            InfoViewer.Values["Roundtrip"] = _server?.Roundtrip.ToString();
-            InfoViewer.Values["Roundtrip Varience"] = _server?.RoundtripVarience.ToString();
+            InfoViewer.Log("Roundtrip", _server?.Roundtrip.ToString());
+            InfoViewer.Log("Roundtrip Varience", _server?.RoundtripVarience.ToString());
 
             Stopwatch.Restart();
 
@@ -200,7 +200,7 @@ namespace VoidTraveler
             if(_server != null)
             {
                 var messages = SerializeMessages(serverMessages);
-                _server.Send(messages, 4, false, _messagesSent++);
+                _server.Send(messages, 5, true, _messagesSent++);
             }
 
             cameraEntities = _camerasSet.GetEntities();

@@ -9,7 +9,7 @@ namespace VoidTraveler.Editor
 {
     public class InfoViewer : IEditor
     {
-        public static ConcurrentDictionary<string, string> Values { get; private set; }
+        private static ConcurrentBag<string> _logs;
 
         public string Name => "Info Viewer";
 
@@ -19,7 +19,12 @@ namespace VoidTraveler.Editor
 
         static InfoViewer()
         {
-            Values = new ConcurrentDictionary<string, string>();
+            _logs = new ConcurrentBag<string>();
+        }
+
+        public static void Log(string name, string value)
+        {
+            _logs.Add($"{name}: {value}");
         }
 
         public void Run(EditorUpdate runParam)
@@ -27,12 +32,12 @@ namespace VoidTraveler.Editor
             var open = Active;
             ImGui.Begin(Name, ref open);
             Active = open;
-            var values = Values.ToList();
-            foreach(var kvp in values.OrderBy(kvp => kvp.Key))
+            var values = _logs.ToList();
+            foreach(var log in values.OrderBy(log => log))
             {
-                ImGui.Text($"{kvp.Key}: {kvp.Value}");
+                ImGui.Text(log);
             }
-            Values.Clear();
+            _logs.Clear();
             ImGui.End();
         }
     }
