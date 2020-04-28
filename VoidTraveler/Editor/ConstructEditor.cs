@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using Veldrid;
 using VoidTraveler.Game.Constructs;
-using VoidTraveler.Game.Constructs.Components;
+using VoidTraveler.Game.Constructs.Component;
 using VoidTraveler.Game.Core;
 using VoidTraveler.Game.Physics;
 using VoidTraveler.Networking;
@@ -18,7 +18,7 @@ namespace VoidTraveler.Editor
     public struct ConstructEditorAction
     {
         [Key(0)]
-        public ConstructTile Tile;
+        public int Action;
         [Key(1)]
         public int X;
         [Key(2)]
@@ -33,12 +33,20 @@ namespace VoidTraveler.Editor
 
         public bool Active { get; set; }
 
-        public (string, ConstructTile)[] _tiles = new (string, ConstructTile)[]
+        public static (string, Action<Entity, Construct, int, int>)[] TileActions = new (string, Action<Entity, Construct, int, int>)[]
         {
-            ("Red Wall", new ConstructTile() { Exists = true, Collides = true, Colour = RgbaFloat.Red }),
-            ("Black Wall", new ConstructTile() { Exists = true, Collides = true, Colour = RgbaFloat.Black }),
-            ("White Floor", new ConstructTile() { Exists = true, Collides = false, Colour = RgbaFloat.White }),
-            ("None", new ConstructTile() { Exists = false })
+            ("Blue Wall", Tile(new ConstructTile() { Exists = true, Collides = true, Colour = RgbaFloat.Blue })),
+            ("Black Wall", Tile(new ConstructTile() { Exists = true, Collides = true, Colour = RgbaFloat.Black })),
+            ("White Floor", Tile(new ConstructTile() { Exists = true, Collides = false, Colour = RgbaFloat.White })),
+            ("Thruster", (Entity e, Construct c, int x, int y) =>
+            {
+                c[x, y] = new ConstructTile() { Exists = true, Collides = true, Colour = RgbaFloat.Red };
+                var thrusterEntity = e.World.CreateEntity();
+                thrusterEntity.Set(new Transform() { Parent = e, Position = c.GetPosition(x, y), Rotation = MathF.PI });
+                thrusterEntity.Set(new ConstructComponent() { Construct = e, XIndex = x, YIndex = y });
+                thrusterEntity.Set(new Thruster() { Active = true, Thrust = 5f });
+            }),
+            ("None", Tile(new ConstructTile() { Exists = false }))
         };
         private int _selectedTile;
 
@@ -55,12 +63,12 @@ namespace VoidTraveler.Editor
             ImGui.Begin(Name, ref open);
             Active = open;
 
-            if (ImGui.BeginCombo("Tile Combo", _tiles[_selectedTile].Item1)) // The second parameter is the label previewed before opening the combo.
+            if (ImGui.BeginCombo("Tile Combo", TileActions[_selectedTile].Item1)) // The second parameter is the label previewed before opening the combo.
             {
-                for (int n = 0; n < _tiles.Length; n++)
+                for (int n = 0; n < TileActions.Length; n++)
                 {
                     bool is_selected = _selectedTile == n; // You can store your selection however you want, outside or inside your objects
-                    if (ImGui.Selectable(_tiles[n].Item1, is_selected))
+                    if (ImGui.Selectable(TileActions[n].Item1, is_selected))
                         _selectedTile = n;
                     if (is_selected)
                         ImGui.SetItemDefaultFocus();   // You may set the initial focus when opening the combo (scrolling + for keyboard navigation support)
@@ -84,12 +92,20 @@ namespace VoidTraveler.Editor
                     if(construct.Contains(xIndex, yIndex))
                     {
                         var netEntity = entity.Get<NetworkedEntity>();
-                        var action = new ConstructEditorAction() { Tile = _tiles[_selectedTile].Item2, X = xIndex, Y = yIndex };
+                        var action = new ConstructEditorAction() { Action = _selectedTile, X = xIndex, Y = yIndex };
                         runParam.ServerMessages.Add(new EntityMessage<ConstructEditorAction>(netEntity.Id, action));
                         break;
                     }
                 }
             }
+        }
+
+        private static Action<Entity, Construct, int, int> Tile(ConstructTile tile)
+        {
+            return (Entity entity, Construct construct, int x, int y) =>
+            {
+                construct[x, y] = tile;
+            };
         }
     }
 
@@ -102,7 +118,7 @@ namespace VoidTraveler.Editor
         protected override void On(in ConstructEditorAction messageData, in Entity entity)
         {
             var construct = entity.Get<Construct>();
-            construct[messageData.X, messageData.Y] = messageData.Tile;
+            ConstructEditor.TileActions[messageData.Action].Item2(entity, construct, messageData.X, messageData.Y);
             entity.Set(construct);
         }
     }

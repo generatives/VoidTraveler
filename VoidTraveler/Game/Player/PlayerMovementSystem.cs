@@ -18,12 +18,7 @@ namespace VoidTraveler.Game.Player
     [With(typeof(Transform), typeof(Player))]
     public class PlayerMovementSystem : AEntitySystem<LogicUpdate>
     {
-        private readonly World _world;
-
-        public PlayerMovementSystem(World world) : base(world)
-        {
-            _world = world;
-        }
+        public PlayerMovementSystem(World world) : base(world) { }
 
         protected override void Update(LogicUpdate update, in Entity entity)
         {
@@ -34,7 +29,7 @@ namespace VoidTraveler.Game.Player
 
             if (player.Fire)
             {
-                var projectile = _world.CreateEntity();
+                var projectile = entity.World.CreateEntity();
                 projectile.Set(new NetworkedEntity() { Id = Guid.NewGuid() });
                 projectile.Set(new Transform() { Position = transform.Position, Parent = transform.Parent });
                 projectile.Set(new Projectile()

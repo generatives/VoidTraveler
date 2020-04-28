@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Numerics;
 using System.Text;
 using Veldrid;
-using VoidTraveler.Game.Constructs.Components;
 
 namespace VoidTraveler.Game.Constructs
 {
@@ -37,6 +36,12 @@ namespace VoidTraveler.Game.Constructs
             var xIndex = (int)Math.Floor((localPosition.X + HalfWidth) / TileSize);
             var yIndex = (int)Math.Floor((localPosition.Y + HalfHeight) / TileSize);
             return (xIndex, yIndex);
+        }
+
+        public Vector2 GetPosition(int x, int y)
+        {
+            var offset = new Vector2(-HalfWidth, -HalfHeight) + (Vector2.One * TileSize / 2f);
+            return (new Vector2(x, y) * TileSize) + offset;
         }
 
         public bool Contains(int x, int y)

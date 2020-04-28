@@ -16,7 +16,6 @@ using VoidTraveler.Game.Physics;
 using VoidTraveler.Physics;
 using VoidTraveler.Core;
 using System.Collections.Generic;
-using VoidTraveler.Game.Constructs.Components;
 using System.Linq;
 using System.Diagnostics;
 using VoidTraveler.Editor;
@@ -29,6 +28,7 @@ using MessagePack;
 using MessagePack.Resolvers;
 using VoidTraveler.Scenes;
 using Singularity;
+using VoidTraveler.Game.Constructs.Component;
 
 namespace VoidTraveler
 {
@@ -70,9 +70,8 @@ namespace VoidTraveler
                 builder.Register<ISystem<LogicUpdate>, PhysicsSystem>(c => c.With(Lifetimes.PerContainer));
                 builder.Register<ISystem<LogicUpdate>, PhysicsBodySync>(c => c.With(Lifetimes.PerContainer));
                 builder.Register<ISystem<LogicUpdate>, ConstructPilotSystem>(c => c.With(Lifetimes.PerContainer));
-
+                builder.Register<ISystem<LogicUpdate>, ThrusterThrustApplier>(c => c.With(Lifetimes.PerContainer));
                 builder.Register<ISystem<LogicUpdate>, PlayerMovementSystem>(c => c.With(Lifetimes.PerContainer));
-
                 builder.Register<ISystem<LogicUpdate>, ProjectileMovementSystem>(c => c.With(Lifetimes.PerContainer));
 
                 builder.Register<NetworkedEntities>(c => c.With(Lifetimes.PerContainer));
@@ -114,7 +113,7 @@ namespace VoidTraveler
             var player = serverScene.World.CreateEntity();
             player.Set(new NetworkedEntity() { Id = Guid.NewGuid() });
             player.Set(new Transform() { Position = new Vector2(0, 0), Parent = construct });
-            player.Set(new Player() { Radius = 0.5f, Colour = RgbaFloat.Blue, MoveSpeed = 5, CurrentConstruct = construct });
+            player.Set(new Player() { Radius = 0.5f, Colour = RgbaFloat.Blue, MoveSpeed = 8, CurrentConstruct = construct });
 
             var clientContainer = new Container((builder) =>
             {
