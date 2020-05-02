@@ -9,7 +9,6 @@ using Veldrid;
 using VoidTraveler.Game.Constructs;
 using VoidTraveler.Game.Constructs.Component;
 using VoidTraveler.Game.Core;
-using VoidTraveler.Game.Physics;
 using VoidTraveler.Networking;
 
 namespace VoidTraveler.Editor
@@ -23,6 +22,8 @@ namespace VoidTraveler.Editor
         public int X;
         [Key(2)]
         public int Y;
+        [Key(3)]
+        public ConstructTileOrientation Orientation;
     }
 
     public class ConstructEditor : IEditor
@@ -33,22 +34,22 @@ namespace VoidTraveler.Editor
 
         public bool Active { get; set; }
 
-        public static (string, Action<Entity, Construct, int, int>)[] TileActions = new (string, Action<Entity, Construct, int, int>)[]
+        public static (string, Action<Entity, Construct, int, int, ConstructTileOrientation>)[] TileActions = new (string, Action<Entity, Construct, int, int, ConstructTileOrientation>)[]
         {
             ("Blue Wall", Tile(new ConstructTile() { Exists = true, Collides = true, Colour = RgbaFloat.Blue })),
             ("Black Wall", Tile(new ConstructTile() { Exists = true, Collides = true, Colour = RgbaFloat.Black })),
             ("White Floor", Tile(new ConstructTile() { Exists = true, Collides = false, Colour = RgbaFloat.White })),
-            ("Thruster", (Entity e, Construct c, int x, int y) =>
+            ("Thruster", (Entity e, Construct c, int x, int y, ConstructTileOrientation orientation) =>
             {
-                c[x, y] = new ConstructTile() { Exists = true, Collides = true, Colour = RgbaFloat.Red };
+                c[x, y] = new ConstructTile() { Exists = true, Collides = true, Orientation = orientation, Colour = RgbaFloat.Red };
                 var thrusterEntity = e.World.CreateEntity();
-                thrusterEntity.Set(new Transform() { Parent = e, Position = c.GetPosition(x, y), Rotation = MathF.PI });
-                thrusterEntity.Set(new ConstructComponent() { Construct = e, XIndex = x, YIndex = y });
-                thrusterEntity.Set(new Thruster() { Active = true, Thrust = 5f });
+                thrusterEntity.Set(new Thruster() { Thrust = 5f });
+                c.SetComponent(x, y, thrusterEntity, e);
             }),
             ("None", Tile(new ConstructTile() { Exists = false }))
         };
         private int _selectedTile;
+        private ConstructTileOrientation _selectedOrientation;
 
         private EntitySet _constructEntities;
 
@@ -76,6 +77,11 @@ namespace VoidTraveler.Editor
                 ImGui.EndCombo();
             }
 
+            var sides = Enum.GetNames(typeof(ConstructTileOrientation));
+            var selectedOrientation = (int)_selectedOrientation;
+            ImGui.Combo("Orientation", ref selectedOrientation, sides, sides.Length);
+            _selectedOrientation = (ConstructTileOrientation)selectedOrientation;
+
             ImGui.End();
 
             if(runParam.CameraSpaceGameInput.GetMouseButtonPressed(Tortuga.Platform.TMouseButton.Left))
@@ -92,7 +98,7 @@ namespace VoidTraveler.Editor
                     if(construct.Contains(xIndex, yIndex))
                     {
                         var netEntity = entity.Get<NetworkedEntity>();
-                        var action = new ConstructEditorAction() { Action = _selectedTile, X = xIndex, Y = yIndex };
+                        var action = new ConstructEditorAction() { Action = _selectedTile, X = xIndex, Y = yIndex, Orientation = _selectedOrientation };
                         runParam.ServerMessages.Add(new EntityMessage<ConstructEditorAction>(netEntity.Id, action));
                         break;
                     }
@@ -100,10 +106,11 @@ namespace VoidTraveler.Editor
             }
         }
 
-        private static Action<Entity, Construct, int, int> Tile(ConstructTile tile)
+        private static Action<Entity, Construct, int, int, ConstructTileOrientation> Tile(ConstructTile tile)
         {
-            return (Entity entity, Construct construct, int x, int y) =>
+            return (Entity entity, Construct construct, int x, int y, ConstructTileOrientation orientation) =>
             {
+                tile.Orientation = orientation;
                 construct[x, y] = tile;
             };
         }
@@ -118,7 +125,7 @@ namespace VoidTraveler.Editor
         protected override void On(in ConstructEditorAction messageData, in Entity entity)
         {
             var construct = entity.Get<Construct>();
-            ConstructEditor.TileActions[messageData.Action].Item2(entity, construct, messageData.X, messageData.Y);
+            ConstructEditor.TileActions[messageData.Action].Item2(entity, construct, messageData.X, messageData.Y, messageData.Orientation);
             entity.Set(construct);
         }
     }

@@ -31,7 +31,7 @@ namespace VoidTraveler.Game.Constructs.Component
                 var constructBody = component.Construct.Get<PhysicsBody>();
 
                 var thrustPos = transform.WorldPosition;
-                var thrustForce = Vector2.UnitY.Rotate(transform.WorldRotation) * thruster.Thrust;
+                var thrustForce = Vector2.UnitY.Rotate(transform.WorldRotation + MathF.PI) * thruster.Thrust;
 
                 constructBody.Body.ApplyForce(thrustForce, thrustPos);
             }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DefaultEcs;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -6,11 +7,32 @@ namespace VoidTraveler.Game.Constructs
 {
     public struct ConstructPilotable
     {
-        public bool Forward { get; set; }
-        public bool Backward { get; set; }
-        public bool Left { get; set; }
-        public bool Right { get; set; }
-        public bool RotateLeft { get; set; }
-        public bool RotateRight { get; set; }
+        public List<Entity> All;
+
+        public List<Entity> PosX;
+        public List<Entity> NegX;
+
+        public List<Entity> PosY;
+        public List<Entity> NegY;
+
+        public List<Entity> PosRot;
+        public List<Entity> NegRot;
+
+        public static ConstructPilotable New()
+        {
+            var pilotable = new ConstructPilotable();
+            pilotable.All = new List<Entity>();
+
+            pilotable.PosX = new List<Entity>();
+            pilotable.NegX = new List<Entity>();
+
+            pilotable.PosY = new List<Entity>();
+            pilotable.NegY = new List<Entity>();
+
+            pilotable.PosRot = new List<Entity>();
+            pilotable.NegRot = new List<Entity>();
+
+            return pilotable;
+        }
     }
 }

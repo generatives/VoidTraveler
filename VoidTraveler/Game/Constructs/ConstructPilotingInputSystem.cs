@@ -55,7 +55,7 @@ namespace VoidTraveler.Game.Constructs
 
         protected override void On(in ConstructPilotingAction messageData, in Entity entity)
         {
-            entity.Set(new ConstructPilotable()
+            entity.Set(new ConstructPilotingControl()
             {
                 Forward = messageData.Forward,
                 Backward = messageData.Backward,

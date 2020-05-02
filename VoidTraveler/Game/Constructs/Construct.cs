@@ -1,8 +1,11 @@
-﻿using System;
+﻿using DefaultEcs;
+using System;
 using System.Collections.Generic;
 using System.Numerics;
 using System.Text;
 using Veldrid;
+using VoidTraveler.Game.Constructs.Component;
+using VoidTraveler.Game.Core;
 
 namespace VoidTraveler.Game.Constructs
 {
@@ -16,6 +19,7 @@ namespace VoidTraveler.Game.Constructs
         public float HalfWidth => Width / 2f;
         public float HalfHeight => Height / 2f;
         public ConstructTile[] Tiles { get; private set; }
+        public Dictionary<(int, int), Entity> Components { get; private set; }
 
         public ConstructTile this[int x, int y]
         {
@@ -29,6 +33,15 @@ namespace VoidTraveler.Game.Constructs
             YLength = yLength;
             TileSize = tileSize;
             Tiles = new ConstructTile[XLength * YLength];
+            Components = new Dictionary<(int, int), Entity>();
+        }
+
+        public void SetComponent(int x, int y, Entity e, Entity construct)
+        {
+            var tile = this[x, y];
+            e.Set(new Transform() { Parent = construct, Position = GetPosition(x, y), Rotation = (int)tile.Orientation * MathF.PI / 2f });
+            e.Set(new ConstructComponent() { Construct = construct, XIndex = x, YIndex = y });
+            Components[(x, y)] = e;
         }
 
         public (int, int) GetIndex(Vector2 localPosition)

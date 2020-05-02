@@ -5,11 +5,12 @@ using System.Collections.Generic;
 using System.Numerics;
 using System.Text;
 using VoidTraveler.Editor;
+using VoidTraveler.Game.Constructs.Component;
 using VoidTraveler.Physics;
 
 namespace VoidTraveler.Game.Constructs
 {
-    [With(typeof(Construct), typeof(PhysicsBody), typeof(ConstructPilotable))]
+    [With(typeof(Construct), typeof(PhysicsBody), typeof(ConstructPilotingControl))]
     public class ConstructPilotSystem : AEntitySystem<LogicUpdate>
     {
         public ConstructPilotSystem(World world) : base(world)
@@ -18,28 +19,78 @@ namespace VoidTraveler.Game.Constructs
 
         protected override void Update(LogicUpdate state, in Entity entity)
         {
-            ref var body = ref entity.Get<PhysicsBody>();
-            ref var pilotable = ref entity.Get<ConstructPilotable>();
+            ref var control = ref entity.Get<ConstructPilotingControl>();
+
+            if(control.Cheat)
+            {
+                CheatMove(ref entity.Get<PhysicsBody>(), ref control);
+            }
+            else
+            {
+                Move(ref entity.Get<ConstructPilotable>(), ref control);
+            }
+        }
+
+        private void Move(ref ConstructPilotable pilotable, ref ConstructPilotingControl control)
+        {
+            pilotable.All.ForEach(e => SetThruster(ref e, false));
+            if (control.Forward)
+            {
+                pilotable.PosY.ForEach(e => SetThruster(ref e, true));
+            }
+            if (control.Backward)
+            {
+                pilotable.NegY.ForEach(e => SetThruster(ref e, true));
+            }
+
+            if (control.Left)
+            {
+                pilotable.NegX.ForEach(e => SetThruster(ref e, true));
+            }
+            if (control.Right)
+            {
+                pilotable.PosX.ForEach(e => SetThruster(ref e, true));
+            }
+
+            if (control.RotateLeft)
+            {
+                pilotable.PosRot.ForEach(e => SetThruster(ref e, true));
+            }
+            if (control.RotateRight)
+            {
+                pilotable.NegRot.ForEach(e => SetThruster(ref e, true));
+            }
+        }
+
+        private void SetThruster(ref Entity e, bool set)
+        {
+            ref var thruster = ref e.Get<Thruster>();
+            thruster.Active = set;
+            e.Set(thruster);
+        }
+
+        private void CheatMove(ref PhysicsBody body, ref ConstructPilotingControl control)
+        {
 
             var force = Vector2.Zero;
-            if (pilotable.Left)
+            if (control.Left)
             {
                 force += Vector2.UnitX * -1f;
             }
-            if (pilotable.Right)
+            if (control.Right)
             {
                 force += Vector2.UnitX;
             }
-            if (pilotable.Forward)
+            if (control.Forward)
             {
                 force += Vector2.UnitY;
             }
-            if (pilotable.Backward)
+            if (control.Backward)
             {
                 force += Vector2.UnitY * -1;
             }
 
-            if(force != Vector2.Zero)
+            if (force != Vector2.Zero)
             {
                 force *= 50;
                 force = Vector2.Transform(force, Matrix3x2.CreateRotation(body.Body.Rotation));
@@ -47,23 +98,20 @@ namespace VoidTraveler.Game.Constructs
             }
 
             var rotationForce = 0;
-            if (pilotable.RotateLeft)
+            if (control.RotateLeft)
             {
                 rotationForce += 1;
             }
-            if (pilotable.RotateRight)
+            if (control.RotateRight)
             {
                 rotationForce += -1;
             }
 
-            if(rotationForce != 0)
+            if (rotationForce != 0)
             {
                 body.Body.ApplyAngularImpulse(rotationForce * 10);
                 body.Body.Awake = true;
             }
-
-            InfoViewer.Log($"V Force {entity.ToString()}", $"X: {force.X}, Y: {force.Y}");
-            InfoViewer.Log($"Vel {entity.ToString()}", $"X: {body.Body.LinearVelocity.X}, Y: {body.Body.LinearVelocity.Y}");
         }
     }
 }

@@ -70,6 +70,7 @@ namespace VoidTraveler
                 builder.Register<ISystem<LogicUpdate>, PhysicsSystem>(c => c.With(Lifetimes.PerContainer));
                 builder.Register<ISystem<LogicUpdate>, PhysicsBodySync>(c => c.With(Lifetimes.PerContainer));
                 builder.Register<ISystem<LogicUpdate>, ConstructPilotSystem>(c => c.With(Lifetimes.PerContainer));
+                builder.Register<ISystem<LogicUpdate>, ConstructFlightControl>(c => c.With(Lifetimes.PerContainer));
                 builder.Register<ISystem<LogicUpdate>, ThrusterThrustApplier>(c => c.With(Lifetimes.PerContainer));
                 builder.Register<ISystem<LogicUpdate>, PlayerMovementSystem>(c => c.With(Lifetimes.PerContainer));
                 builder.Register<ISystem<LogicUpdate>, ProjectileMovementSystem>(c => c.With(Lifetimes.PerContainer));
@@ -100,7 +101,8 @@ namespace VoidTraveler
             construct.Set(new NetworkedEntity() { Id = Guid.NewGuid() });
             construct.Set(new Transform() { Position = new Vector2(0, 0) });
             construct.Set(CreateBoundedConstruct(1, 10, 20));
-            construct.Set(new ConstructPilotable());
+            construct.Set(new ConstructPilotingControl());
+            construct.Set(ConstructPilotable.New());
             construct.Set(new PhysicsBody());
             construct.Set(new Camera());
 
