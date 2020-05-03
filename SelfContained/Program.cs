@@ -55,6 +55,7 @@ namespace VoidTraveler
             Message<EntityMessage<ConstructMessage>>();
             Message<EntityMessage<ConstructPilotingAction>>();
             Message<EntityMessage<ConstructEditorAction>>();
+            Message<EntityMessage<ThrusterMessage>>();
 
             var serverContainer = new Container(builder =>
             {
@@ -84,6 +85,7 @@ namespace VoidTraveler
                 builder.Register<ISystem<ServerSystemUpdate>, CameraServerSystem>(c => c.With(Lifetimes.PerContainer));
                 builder.Register<ISystem<ServerSystemUpdate>, ConstructServerSystem>(c => c.With(Lifetimes.PerContainer));
                 builder.Register<ISystem<ServerSystemUpdate>, ConstructServerInitSystem>(c => c.With(Lifetimes.PerContainer));
+                builder.Register<ISystem<ServerSystemUpdate>, ThrusterServerSystem>(c => c.With(Lifetimes.PerContainer));
             });
 
             var serverScene = new Scene(
@@ -124,6 +126,7 @@ namespace VoidTraveler
                 builder.Register<ISystem<DrawDevice>, ConstructRenderer>(c => c.With(Lifetimes.PerContainer));
                 builder.Register<ISystem<DrawDevice>, PlayerRenderer>(c => c.With(Lifetimes.PerContainer));
                 builder.Register<ISystem<DrawDevice>, ProjectileRenderer>(c => c.With(Lifetimes.PerContainer));
+                builder.Register<ISystem<DrawDevice>, ThrusterRenderer>(c => c.With(Lifetimes.PerContainer));
 
                 builder.Register<NetworkedEntities>(c => c.With(Lifetimes.PerContainer));
 
@@ -133,6 +136,7 @@ namespace VoidTraveler
                 builder.Register<IMessageReciever, ProjectileMessageApplier>(c => c.With(Lifetimes.PerContainer));
                 builder.Register<IMessageReciever, CameraMessageApplier>(c => c.With(Lifetimes.PerContainer));
                 builder.Register<IMessageReciever, ConstructMessageApplier>(c => c.With(Lifetimes.PerContainer));
+                builder.Register<IMessageReciever, ThrusterMessageApplier>(c => c.With(Lifetimes.PerContainer));
                 builder.Register<IMessageReciever, EntityRemover>(c => c.With(Lifetimes.PerContainer));
 
                 builder.Register<ISystem<LogicUpdate>, TransformLerper>(c => c.With(Lifetimes.PerContainer));

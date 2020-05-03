@@ -43,6 +43,7 @@ namespace VoidTraveler.Editor
             {
                 c[x, y] = new ConstructTile() { Exists = true, Collides = true, Orientation = orientation, Colour = RgbaFloat.Red };
                 var thrusterEntity = e.World.CreateEntity();
+                thrusterEntity.Set(new NetworkedEntity() { Id = Guid.NewGuid() });
                 thrusterEntity.Set(new Thruster() { Thrust = 5f });
                 c.SetComponent(x, y, thrusterEntity, e);
             }),
